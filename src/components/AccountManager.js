@@ -222,29 +222,46 @@ const AccountManager = ({ onAccountCreated, isSetupMode = false }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400">
-                Manage your financial accounts and track balances
-              </p>
+    <div className={isSetupMode ? "" : "min-h-screen bg-gray-50 dark:bg-black"}>
+      <div className={isSetupMode ? "" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"}>
+        {/* Header Section - Only show description in non-setup mode */}
+        {!isSetupMode && (
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage your financial accounts and track balances
+                </p>
+              </div>
+              {!showCreateForm && accounts.length > 0 && (
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Account
+                </button>
+              )}
             </div>
-            {!showCreateForm && accounts.length > 0 && (
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Account
-              </button>
-            )}
           </div>
-        </div>
+        )}
+
+        {/* Setup mode: Show add button when no accounts exist */}
+        {isSetupMode && accounts.length === 0 && !showCreateForm && (
+          <div className="text-center mb-8">
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Create Your First Account
+            </button>
+          </div>
+        )}
 
         {/* Error Display */}
         {error && (
@@ -260,17 +277,30 @@ const AccountManager = ({ onAccountCreated, isSetupMode = false }) => {
 
         {/* Account Summary Cards */}
         {accounts.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Your Accounts ({accounts.length})
-              </h2>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Total Balance: ₹{accounts.reduce((sum, acc) => sum + acc.balance, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <div className={isSetupMode ? "mb-6" : "mb-8"}>
+            {!isSetupMode && (
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Your Accounts ({accounts.length})
+                </h2>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Total Balance: ₹{accounts.reduce((sum, acc) => sum + acc.balance, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
               </div>
-            </div>
+            )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isSetupMode && (
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  {accounts.length === 1 ? 'Your Account' : `Your Accounts (${accounts.length})`}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {accounts.length === 1 ? 'Great start! You can add more accounts if needed.' : 'Perfect! You can add more accounts or continue to the next step.'}
+                </p>
+              </div>
+            )}
+            
+            <div className={`grid gap-4 ${isSetupMode ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
               {accounts.map(account => {
                 const accountType = accountTypes.find(t => t.value === account.type);
                 const typeColor = getAccountTypeColor(account.type);
@@ -363,7 +393,7 @@ const AccountManager = ({ onAccountCreated, isSetupMode = false }) => {
 
         {/* Create/Edit Account Form */}
         {showCreateForm && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+          <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8 ${isSetupMode ? 'max-w-2xl mx-auto' : ''}`}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {editingAccount ? 'Edit Account' : 'Create New Account'}
@@ -379,7 +409,7 @@ const AccountManager = ({ onAccountCreated, isSetupMode = false }) => {
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className={`grid gap-5 ${isSetupMode ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Account Name *
@@ -480,17 +510,18 @@ const AccountManager = ({ onAccountCreated, isSetupMode = false }) => {
                 />
               </div>
 
-              <div className="flex space-x-3 pt-4">
+              <div className={`flex space-x-3 pt-6 ${isSetupMode ? 'border-t border-gray-200 dark:border-gray-700' : ''}`}>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className={`flex-1 ${isSetupMode ? 'py-3 px-6 text-base' : 'py-2.5 px-4 text-sm'} bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl ${isSetupMode ? 'transform hover:scale-105' : 'shadow-sm hover:shadow-md'}`}
                 >
+                  <span className="mr-2">🏦</span>
                   {editingAccount ? 'Update Account' : 'Create Account'}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 py-2.5 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                  className={`flex-1 ${isSetupMode ? 'py-3 px-6 text-base' : 'py-2.5 px-4 text-sm'} bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200`}
                 >
                   Cancel
                 </button>
@@ -523,26 +554,36 @@ const AccountManager = ({ onAccountCreated, isSetupMode = false }) => {
 
         {/* Continue to Next Step button for setup mode */}
         {isSetupMode && accounts.length > 0 && (
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4 lg:p-6 bg-gray-50 dark:bg-gray-900/50">
+          <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6">
             <div className="text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Perfect! You've created {accounts.length} account{accounts.length === 1 ? '' : 's'}. 
-                You can add more accounts or continue to the next step.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="mb-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full mb-3">
+                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Account{accounts.length === 1 ? '' : 's'} Created Successfully!
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  You've set up {accounts.length} account{accounts.length === 1 ? '' : 's'}. 
+                  {accounts.length === 1 ? ' You can add more accounts or continue to set up categories.' : ' You can add more accounts or continue to the next step.'}
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="px-4 py-2 border border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium"
+                  className="px-4 py-2.5 border-2 border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 font-medium hover:shadow-md"
                 >
                   <span className="mr-2">➕</span>
                   Add Another Account
                 </button>
                 <button
                   onClick={() => onAccountCreated && onAccountCreated()}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  <span className="mr-2">👍</span>
-                  Continue to Next Step
+                  <span className="mr-2">🎯</span>
+                  Continue to Categories
                 </button>
               </div>
             </div>

@@ -102,22 +102,8 @@ const MobileOptimizer = ({ children }) => {
         </div>
       )}
 
-      {/* Mobile Action Bar - Top */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-2 z-40">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Online</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">12:34</span>
-            <div className="w-6 h-3 bg-gray-300 rounded-sm"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="pt-12 lg:pt-0">
+      {/* Main Content - No top padding needed since status bar is removed */}
+      <div>
         {children}
       </div>
     </div>
