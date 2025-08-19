@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import SocialLogin from './SocialLogin';
 
 function Register({ onSwitchToLogin }) {
@@ -413,6 +413,35 @@ function Register({ onSwitchToLogin }) {
                   {formErrors.confirmPassword}
                 </p>
               )}
+            </div>
+
+            {/* Terms and Privacy Agreement */}
+            <div className="flex items-start space-x-3">
+              <input
+                id="termsAccepted"
+                name="termsAccepted"
+                type="checkbox"
+                required
+                className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
+              />
+              <label htmlFor="termsAccepted" className="text-sm text-gray-700 dark:text-gray-300">
+                I agree to the{' '}
+                <Link 
+                  to="/terms-of-service" 
+                  target="_blank"
+                  className="text-primary-600 dark:text-primary-400 hover:text-primary-500 underline"
+                >
+                  Terms of Service
+                </Link>
+                {' '}and{' '}
+                <Link 
+                  to="/privacy-policy" 
+                  target="_blank"
+                  className="text-primary-600 dark:text-primary-400 hover:text-primary-500 underline"
+                >
+                  Privacy Policy
+                </Link>
+              </label>
             </div>
 
             {/* Submit Button */}

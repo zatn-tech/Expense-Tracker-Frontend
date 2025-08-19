@@ -2,7 +2,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import SocialLogin from './SocialLogin';
 
 function Login({ onSwitchToRegister }) {
@@ -245,10 +245,9 @@ function Login({ onSwitchToRegister }) {
           <SocialLogin 
             onSuccess={({ token, user }) => {
               // The social login component will handle the authentication
-              console.log('Social login successful:', user);
             }}
             onError={(error) => {
-              console.error('Social login error:', error);
+              // Social login error handled by component
             }}
           />
         </div>
@@ -260,6 +259,28 @@ function Login({ onSwitchToRegister }) {
             <button onClick={onSwitchToRegister} className="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500">
               Sign up now
             </button>
+          </p>
+        </div>
+
+        {/* Privacy and Terms Links */}
+        <div className="text-center mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            By using ExpenseTracker, you agree to our{' '}
+            <Link 
+              to="/terms-of-service" 
+              target="_blank"
+              className="text-primary-600 dark:text-primary-400 hover:text-primary-500 underline"
+            >
+              Terms of Service
+            </Link>
+            {' '}and{' '}
+            <Link 
+              to="/privacy-policy" 
+              target="_blank"
+              className="text-primary-600 dark:text-primary-400 hover:text-primary-500 underline"
+            >
+              Privacy Policy
+            </Link>
           </p>
         </div>
       </div>

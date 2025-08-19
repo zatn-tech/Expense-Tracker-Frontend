@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -48,9 +49,19 @@ const Footer = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>© 2024 ExpenseTracker. All rights reserved.</span>
             <div className="flex items-center space-x-4 mt-2 sm:mt-0">
-              <span>Privacy Policy</span>
+              <Link 
+                to="/privacy-policy" 
+                className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              >
+                Privacy Policy
+              </Link>
               <span>•</span>
-              <span>Terms of Service</span>
+              <Link 
+                to="/terms-of-service" 
+                className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              >
+                Terms of Service
+              </Link>
             </div>
           </div>
         </div>
