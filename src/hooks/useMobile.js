@@ -55,17 +55,15 @@ export const useMobile = () => {
       try {
         await navigator.share(data);
         return true;
-      } catch (error) {
-        console.log('Error sharing:', error);
-        return false;
-      }
+          } catch (error) {
+      return false;
+    }
     }
     return false;
   };
 
   const addToHomeScreen = () => {
     // Add to Home Screen functionality disabled to prevent hot reload issues
-    console.log('Add to Home Screen functionality disabled');
   };
 
   return {

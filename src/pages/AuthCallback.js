@@ -12,8 +12,7 @@ const AuthCallback = () => {
     const handleCallback = async () => {
       // Prevent multiple executions
       if (hasProcessed.current) {
-        console.log('🔄 AuthCallback: Already processed, skipping...');
-        return;
+            return;
       }
 
       console.log('🔄 AuthCallback: Starting callback handling');

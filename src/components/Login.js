@@ -16,6 +16,7 @@ function Login({ onSwitchToRegister }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     clearError();
@@ -67,7 +68,7 @@ function Login({ onSwitchToRegister }) {
       return;
     }
     try {
-      await login(formData.email, formData.password);
+      await login(formData.email, formData.password, rememberMe);
     } catch (error) {
       // Check if the error is about email verification
       if (error.message && error.message.toLowerCase().includes('verify your email')) {
@@ -185,6 +186,34 @@ function Login({ onSwitchToRegister }) {
                 </button>
               </div>
               {formErrors.password && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{formErrors.password}</p>}
+            </div>
+
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary-800"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                  Remember me
+                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Stay logged in across browser sessions</span>
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+                >
+                  Forgot your password?
+                </button>
+              </div>
             </div>
 
             {/* Submit */}

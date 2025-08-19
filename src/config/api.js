@@ -5,12 +5,6 @@
 const getApiBaseUrl = () => {
   const productionUrl = 'https://expenseapi.zatn.in';
   
-  console.log('🔗 ALL DEVICES → Production API URL:', productionUrl);
-  console.log('📱 Device Info:', {
-    hostname: typeof window !== 'undefined' ? window.location?.hostname : 'server',
-    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent.substring(0, 50) + '...' : 'server'
-  });
-  
   return productionUrl;
 };
 

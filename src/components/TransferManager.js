@@ -22,75 +22,45 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
   // Use accounts passed from dashboard instead of fetching again
   const accounts = dashboardAccounts?.filter(account => account.isActive) || [];
 
-  useEffect(() => {
-    console.log('TransferManager component mounted');
-    console.log('🏦 Accounts from dashboard:', accounts.length);
-  }, [accounts]);
-
-  useEffect(() => {
-    console.log('Form data changed:', formData);
-  }, [formData]);
-
-  useEffect(() => {
-    console.log('Errors state changed:', errors);
-  }, [errors]);
-
-  useEffect(() => {
-    console.log('Success state changed:', success);
-  }, [success]);
-
-  useEffect(() => {
-    console.log('Loading state changed:', loading);
-  }, [loading]);
-
-  useEffect(() => {
-    console.log('Validating state changed:', validating);
-  }, [validating]);
-
-  useEffect(() => {
-    return () => {
-      console.log('TransferManager component unmounting');
-    };
-  }, []);
+ 
 
   const validateTransfer = async () => {
-    console.log('Starting transfer validation');
     
     if (!formData.fromAccountId || !formData.toAccountId || !formData.amount) {
-      console.log('Validation failed: missing required fields');
+      
       setSafeErrors({ general: 'Please fill in all required fields' });
       return false;
     }
 
     if (formData.fromAccountId === formData.toAccountId) {
-      console.log('Validation failed: same account selected');
+      
       setSafeErrors({ general: 'Cannot transfer to the same account' });
       return false;
     }
 
     if (parseFloat(formData.amount) <= 0) {
-      console.log('Validation failed: invalid amount');
+      
       setSafeErrors({ amount: 'Amount must be greater than 0' });
       return false;
     }
 
     // Check for reasonable transfer amount (max 1 billion)
     if (parseFloat(formData.amount) > 1000000000) {
-      console.log('Validation failed: amount too large');
+
       setSafeErrors({ amount: 'Amount cannot exceed 1 billion' });
       return false;
     }
 
     // Check for decimal places
     if (formData.amount.includes('.') && formData.amount.split('.')[1].length > 2) {
-      console.log('Validation failed: too many decimal places');
+      
       setSafeErrors({ amount: 'Amount cannot have more than 2 decimal places' });
       return false;
     }
 
     setValidating(true);
-    console.log('Validation state set to true');
-    console.log('Starting server-side validation');
+  
+  
     try {
       const validationData = {
         fromAccountId: formData.fromAccountId,
@@ -98,67 +68,58 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
         amount: parseFloat(formData.amount)
       };
       
-      console.log('Validating transfer with data:', validationData);
-      console.log('Validation data types:', {
-        fromAccountId: typeof formData.fromAccountId,
-        toAccountId: typeof formData.toAccountId,
-        amount: typeof parseFloat(formData.amount)
-      });
+      
+      
       
       const response = await axios.post(API_ENDPOINTS.TRANSFER_VALIDATE, validationData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log('Validation response received:', response.data);
+      
 
       if (response.data.status === 'success') {
-        console.log('Transfer validation successful:', response.data.data);
+        
         setSafeErrors({});
-        console.log('Validation successful, returning true');
+        
         return true;
       }
     } catch (error) {
-      console.error('Validation error caught:', {
-        error: error.response?.data,
-        status: error.response?.status,
-        message: error.message,
-        stack: error.stack
-      });
+    
       let errorMessage = 'Transfer validation failed';
       
-      console.log('Processing error response:', error.response?.data);
+      
       
       if (error.response?.data?.error) {
         if (typeof error.response.data.error === 'string') {
           errorMessage = error.response.data.error;
-          console.log('Using error string:', errorMessage);
+          
         } else if (error.response.data.error.message) {
           errorMessage = error.response.data.error.message;
-          console.log('Using error.message:', errorMessage);
+          
         } else if (error.response.data.message) {
           errorMessage = error.response.data.message;
-          console.log('Using response.message:', errorMessage);
+          
         }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
-        console.log('Using response.message:', errorMessage);
+        
       }
       
       setSafeErrors({ general: errorMessage });
-      console.log('Setting validation error message:', errorMessage);
+      
       return false;
     } finally {
       setValidating(false);
-      console.log('Validation state set to false');
+      
     }
 
-    console.log('Validation failed, returning false');
+    
     return false;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Transfer form submitted:', formData);
+    
     setSafeErrors({});
     setSuccess('');
 
@@ -166,28 +127,28 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
     if (!isValid) return;
 
     setLoading(true);
-    console.log('Loading state set to true');
+   
     let retryCount = 0;
     const maxRetries = 2;
 
     while (retryCount <= maxRetries) {
-      console.log(`Transfer attempt ${retryCount + 1}/${maxRetries + 1}`);
+   
       try {
             const transferData = {
       ...formData,
       amount: parseFloat(formData.amount)
     };
     
-    console.log('Submitting transfer:', transferData);
+   
     
     const response = await axios.post(API_ENDPOINTS.TRANSFERS, transferData, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
         if (response.data.status === 'success') {
-          console.log('Transfer successful:', response.data.data);
+   
           setSuccess('Transfer completed successfully!');
-          console.log('Success message set');
+   
           const resetFormData = {
             fromAccountId: '',
             toAccountId: '',
@@ -196,48 +157,43 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
             transferDate: new Date().toISOString().split('T')[0],
             notes: ''
           };
-          console.log('Resetting form data');
+   
           setFormData(resetFormData);
           
           if (onTransferComplete) {
-            console.log('Calling onTransferComplete callback');
+   
             onTransferComplete(response.data.data);
           }
           break; // Success, exit retry loop
         }
       } catch (error) {
-        console.error(`Submit error (attempt ${retryCount + 1}):`, {
-          error: error.response?.data,
-          status: error.response?.status,
-          message: error.message,
-          stack: error.stack
-        });
+   
         let errorMessage = 'Failed to complete transfer';
         
-        console.log('Processing submit error response:', error.response?.data);
+        
         
         if (error.response?.data?.error) {
           if (typeof error.response.data.error === 'string') {
             errorMessage = error.response.data.error;
-            console.log('Using submit error string:', errorMessage);
+
           } else if (error.response.data.error.message) {
             errorMessage = error.response.data.error.message;
-            console.log('Using submit error.message:', errorMessage);
+            
           } else if (error.response.data.message) {
             errorMessage = error.response.data.message;
-            console.log('Using submit response.message:', errorMessage);
+            
           }
         } else if (error.response?.data?.message) {
           errorMessage = error.response.data.message;
-          console.log('Using submit response.message:', errorMessage);
+          
         }
 
         // If it's a retryable error and we haven't exceeded max retries
-        console.log('Checking if error is retryable:', { errorMessage, retryCount, maxRetries });
+        
         
         if (errorMessage.includes('try again') && retryCount < maxRetries) {
           retryCount++;
-          console.log(`Retrying transfer (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+        
           setSafeErrors({ general: `Transfer attempt ${retryCount} failed, retrying...` });
           await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
           continue;
@@ -246,29 +202,25 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
         }
         
         setSafeErrors({ general: errorMessage });
-        console.log('Setting final error message:', errorMessage);
-        console.log('Exiting retry loop due to non-retryable error or max retries reached');
         break; // Exit retry loop on non-retryable error or max retries reached
       }
     }
     
     setLoading(false);
-    console.log('Loading state set to false');
-    console.log('Transfer submission process completed');
-  };
+    };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log('Form input changed:', { name, value });
+    
     setFormData(prev => ({ ...prev, [name]: value }));
     
     // Clear errors when user starts typing
     if (errors[name]) {
-      console.log('Clearing field error:', name);
+    
       setSafeErrors({ ...errors, [name]: '' });
     }
     if (errors.general) {
-      console.log('Clearing general error');
+    
       setSafeErrors({ ...errors, general: '' });
     }
   };
@@ -276,14 +228,14 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
   const getAccountBalance = (accountId) => {
     const account = accounts.find(acc => acc._id === accountId);
     const balance = account ? account.balance : 0;
-    console.log('Getting account balance:', { accountId, balance, accountName: account?.name });
+    
     return balance;
   };
 
   const getAccountCurrency = (accountId) => {
     const account = accounts.find(acc => acc._id === accountId);
     const currency = account ? account.currency : 'INR';
-    console.log('Getting account currency:', { accountId, currency, accountName: account?.name });
+    
     return currency;
   };
 
@@ -297,7 +249,6 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
         safeErrors[key] = 'An error occurred';
       }
     });
-    console.log('Setting safe errors:', { original: errorObj, safe: safeErrors });
     setErrors(safeErrors);
   };
 

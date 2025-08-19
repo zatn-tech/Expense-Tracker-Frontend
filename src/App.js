@@ -1,7 +1,6 @@
 // src/App.js
 import React, { useContext, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './test-api-url'; // Temporary test import
 import { AuthContext } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -17,6 +16,8 @@ import ResetPassword from './components/ResetPassword';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import Login from './components/Login';
 import AuthCallback from './pages/AuthCallback';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import MobileOptimizer from './components/MobileOptimizer';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -59,7 +60,6 @@ function ProtectedRoute({ children }) {
   if (user.isSetupComplete !== true) {
     return <Navigate to={`/user/${user._id}/setup`} replace />;
   }
-  
   return children;
 }
 
@@ -117,6 +117,8 @@ function App() {
                     <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
                     <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms-of-service" element={<TermsOfService />} />
                     
                     {/* Protected Routes */}
                     <Route 

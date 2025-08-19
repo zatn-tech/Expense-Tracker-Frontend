@@ -73,7 +73,7 @@ const EmailConnectionManager = () => {
         setConnections(data.data);
       }
     } catch (error) {
-      console.error('Error fetching connections:', error);
+      // Error fetching connections
     }
   };
 
@@ -91,7 +91,7 @@ const EmailConnectionManager = () => {
         setEmailTransactions(data.data.transactions);
       }
     } catch (error) {
-      console.error('Error fetching email transactions:', error);
+      // Error fetching email transactions
     }
   };
 
@@ -140,7 +140,7 @@ const EmailConnectionManager = () => {
         alert(`Error: ${data.message || 'Failed to add connection'}`);
       }
     } catch (error) {
-      console.error('Error adding connection:', error);
+      // Error adding connection
       alert('Error adding connection. Please try again.');
     } finally {
       setLoading(false);
@@ -168,7 +168,7 @@ const EmailConnectionManager = () => {
         alert(`Scan failed: ${data.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error scanning emails:', error);
+      // Error scanning emails
       alert('Error scanning emails. Please try again.');
     } finally {
       setScanningEmails(false);
@@ -207,7 +207,7 @@ const EmailConnectionManager = () => {
         alert(`Rejection failed: ${data.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error rejecting transaction:', error);
+      // Error rejecting transaction
       alert('Error rejecting transaction. Please try again.');
     } finally {
       setRejectingTransaction(null);
@@ -280,7 +280,7 @@ const EmailConnectionManager = () => {
         }
       }
     } catch (error) {
-      console.error('Error processing transaction:', error);
+      // Error processing transaction
       alert('Error processing transaction. Please try again.');
     } finally {
       setLoading(false);
@@ -352,7 +352,7 @@ const EmailConnectionManager = () => {
         alert(`Error: ${data.message || 'Failed to update connection'}`);
       }
     } catch (error) {
-      console.error('Error updating connection:', error);
+      // Error updating connection
       alert('Error updating connection. Please try again.');
     } finally {
       setLoading(false);
@@ -382,7 +382,7 @@ const EmailConnectionManager = () => {
         alert(`Error: ${data.message || 'Failed to delete connection'}`);
       }
     } catch (error) {
-      console.error('Error deleting connection:', error);
+      // Error deleting connection
       alert('Error deleting connection. Please try again.');
     }
   };

@@ -92,7 +92,7 @@ const SetupPage = () => {
         }
       }
     } catch (err) {
-      console.error('SetupPage - Error refreshing user data:', err);
+      // Error refreshing user data - handle silently
     }
     return null;
   };

@@ -7,7 +7,37 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || sessionStorage.getItem('token'));
+  const [token, setToken] = useState(() => {
+    // Check localStorage first (persistent tokens)
+    const localToken = localStorage.getItem('token');
+    const tokenExpiry = localStorage.getItem('tokenExpiry');
+    
+    if (localToken) {
+      // Check if localStorage token is expired
+      if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenPersistent');
+        localStorage.removeItem('tokenExpiry');
+      } else {
+        return localToken;
+      }
+    }
+    
+    // Check sessionStorage (session-only tokens)
+    const sessionToken = sessionStorage.getItem('token');
+    const sessionExpiry = sessionStorage.getItem('sessionExpiry');
+    
+    if (sessionToken) {
+      // Check if session token is expired
+      if (sessionExpiry && Date.now() > parseInt(sessionExpiry)) {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('sessionExpiry');
+      } else {
+        return sessionToken;
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -35,13 +65,11 @@ export const AuthProvider = ({ children }) => {
           const res = await axios.get(API_ENDPOINTS.ME);
           
           if (res.data.status === 'success') {
-             setUser(res.data.data.user);
-            
+            setUser(res.data.data.user);
           } else {
             throw new Error('Failed to get user data');
           }
         } catch (err) {
-          console.error('Auth check failed:', err);
           // Clear invalid token
           localStorage.removeItem('token');
           sessionStorage.removeItem('token');
@@ -51,14 +79,84 @@ export const AuthProvider = ({ children }) => {
           setLoading(false);
           setIsInitialized(true);
         }
+      } else {
+        // No token found - set initialized to true so app can proceed
+        setIsInitialized(true);
       }
-      
     };
 
     checkAuthStatus();
   }, [token]);
 
-  const login = async (email, password, rememberMe = false) => {
+  // Listen for storage changes to sync auth state across tabs
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'token') {
+        if (e.newValue) {
+          // Token was added in another tab
+          setToken(e.newValue);
+        } else {
+          // Token was removed in another tab
+          setToken(null);
+          setUser(null);
+          delete axios.defaults.headers.common['Authorization'];
+        }
+      }
+    };
+
+    // Listen for storage events (cross-tab synchronization for localStorage only)
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Cross-tab sync (only works for localStorage, not sessionStorage)
+  useEffect(() => {
+    const syncTokenAcrossTabs = () => {
+      // Check localStorage first (cross-tab sync possible)
+      const localToken = localStorage.getItem('token');
+      const localExpiry = localStorage.getItem('tokenExpiry');
+      
+      if (localToken && (!localExpiry || Date.now() <= parseInt(localExpiry))) {
+        if (localToken !== token) {
+          setToken(localToken);
+        }
+        return;
+      }
+      
+      // If no valid localStorage token and current token exists, it might be sessionStorage
+      // SessionStorage can't be synced across tabs by design (security feature)
+      if (!localToken && token) {
+        // Check if current token is from sessionStorage
+        const sessionToken = sessionStorage.getItem('token');
+        if (sessionToken === token) {
+          return;
+        }
+      }
+      
+      // No valid token found, clear current token
+      if (localToken !== token) {
+        setToken(null);
+      }
+    };
+
+    // Use broadcast channel for real-time cross-tab communication
+    const broadcastChannel = new BroadcastChannel('auth_sync');
+    
+    broadcastChannel.onmessage = (event) => {
+      if (event.data.type === 'AUTH_STATE_CHANGE') {
+        syncTokenAcrossTabs();
+      }
+    };
+
+    return () => {
+      broadcastChannel.close();
+    };
+  }, [token]);
+
+  const login = async (email, password, rememberMe = true) => {
     setLoading(true);
     setError(null);
     
@@ -74,13 +172,33 @@ export const AuthProvider = ({ children }) => {
         setToken(newToken);
         setUser(userData);
         
-        // Store token based on remember me preference
+        // Store token with security considerations
         if (rememberMe) {
+          // Persistent login: use localStorage for cross-tab experience
           localStorage.setItem('token', newToken);
+          localStorage.setItem('tokenPersistent', 'true');
           sessionStorage.removeItem('token');
+          // Set expiration for security (30 days)
+          const expiryTime = Date.now() + (30 * 24 * 60 * 60 * 1000);
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
         } else {
+          // Session-only login: use sessionStorage for better security
           sessionStorage.setItem('token', newToken);
           localStorage.removeItem('token');
+          localStorage.removeItem('tokenPersistent');
+          localStorage.removeItem('tokenExpiry');
+          // Set session expiry (8 hours)
+          const sessionExpiry = Date.now() + (8 * 60 * 60 * 1000);
+          sessionStorage.setItem('sessionExpiry', sessionExpiry.toString());
+        }
+        
+        // Notify other tabs of auth state change
+        try {
+          const broadcastChannel = new BroadcastChannel('auth_sync');
+          broadcastChannel.postMessage({ type: 'AUTH_STATE_CHANGE', action: 'LOGIN' });
+          broadcastChannel.close();
+        } catch (error) {
+          // Broadcast failed - continue silently
         }
         
         return userData;
@@ -88,7 +206,6 @@ export const AuthProvider = ({ children }) => {
         throw new Error(res.data.message || 'Login failed');
       }
     } catch (err) {
-      console.error('Login error:', err);
       let errorMessage = 'Login failed. Please try again.';
       
       if (err.response?.data) {
@@ -107,31 +224,39 @@ export const AuthProvider = ({ children }) => {
   };
 
   const socialLogin = async (token, userData, rememberMe = false) => {
-    console.log('🔐 AuthContext: socialLogin called with:', { token: token.substring(0, 20) + '...', userData, rememberMe });
-    
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🔐 AuthContext: Setting token and user...');
       setToken(token);
       setUser(userData);
       
-      // Store token based on remember me preference
+      // Store token with security considerations
       if (rememberMe) {
         localStorage.setItem('token', token);
+        localStorage.setItem('tokenPersistent', 'true');
         sessionStorage.removeItem('token');
-        console.log('🔐 AuthContext: Token stored in localStorage');
+        const expiryTime = Date.now() + (30 * 24 * 60 * 60 * 1000);
+        localStorage.setItem('tokenExpiry', expiryTime.toString());
       } else {
         sessionStorage.setItem('token', token);
         localStorage.removeItem('token');
-        console.log('🔐 AuthContext: Token stored in sessionStorage');
+        localStorage.removeItem('tokenPersistent');
+        localStorage.removeItem('tokenExpiry');
+        const sessionExpiry = Date.now() + (8 * 60 * 60 * 1000);
+        sessionStorage.setItem('sessionExpiry', sessionExpiry.toString());
       }
       
-      console.log('🔐 AuthContext: socialLogin completed successfully');
+      // Notify other tabs of auth state change
+      try {
+        const broadcastChannel = new BroadcastChannel('auth_sync');
+        broadcastChannel.postMessage({ type: 'AUTH_STATE_CHANGE', action: 'SOCIAL_LOGIN' });
+        broadcastChannel.close();
+      } catch (error) {
+        // Broadcast failed - continue silently
+      }
       return userData;
     } catch (err) {
-      console.error('❌ AuthContext: Social login error:', err);
       setError('Social login failed. Please try again.');
       throw new Error('Social login failed. Please try again.');
     } finally {
@@ -161,7 +286,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(res.data.message || 'Registration failed');
       }
     } catch (err) {
-      console.error('Registration error:', err);
+      // Registration error handled above
       let errorMessage = 'Registration failed. Please try again.';
       
       if (err.response?.data) {
@@ -197,7 +322,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(res.data.message || 'Failed to send reset email');
       }
     } catch (err) {
-      console.error('Forgot password error:', err);
+      // Forgot password error handled above
       const errorMessage = err.response?.data?.message || 'Failed to send reset email. Please try again.';
       setError(errorMessage);
       throw new Error(errorMessage);
@@ -231,7 +356,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(res.data.message || 'Password reset failed');
       }
     } catch (err) {
-      console.error('Reset password error:', err);
+      // Reset password error handled above
       const errorMessage = err.response?.data?.message || 'Password reset failed. Please try again.';
       setError(errorMessage);
       throw new Error(errorMessage);
@@ -272,7 +397,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(res.data.message || 'Password update failed');
       }
     } catch (err) {
-      console.error('Update password error:', err);
+      // Update password error handled above
       const errorMessage = err.response?.data?.message || 'Password update failed. Please try again.';
       setError(errorMessage);
       throw new Error(errorMessage);
@@ -299,7 +424,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(res.data.message || 'Failed to send verification email');
       }
     } catch (err) {
-      console.error('Resend verification error:', err);
+      // Resend verification error handled above
       const errorMessage = err.response?.data?.message || 'Failed to send verification email. Please try again.';
       setError(errorMessage);
       throw new Error(errorMessage);
@@ -314,15 +439,30 @@ export const AuthProvider = ({ children }) => {
       await axios.post(API_ENDPOINTS.LOGOUT);
     } catch (err) {
       // Don't throw error for logout - clear local state anyway
-      console.error('Logout error:', err);
     } finally {
       // Clear local state
       setUser(null);
       setToken(null);
       setError(null);
+      
+      // Clear all auth-related storage
       localStorage.removeItem('token');
+      localStorage.removeItem('tokenPersistent');
+      localStorage.removeItem('tokenExpiry');
       sessionStorage.removeItem('token');
+      sessionStorage.removeItem('sessionExpiry');
+      sessionStorage.removeItem('sessionActive');
+      
       delete axios.defaults.headers.common['Authorization'];
+      
+      // Notify other tabs of logout
+      try {
+        const broadcastChannel = new BroadcastChannel('auth_sync');
+        broadcastChannel.postMessage({ type: 'AUTH_STATE_CHANGE', action: 'LOGOUT' });
+        broadcastChannel.close();
+      } catch (error) {
+        // Broadcast failed - continue silently
+      }
     }
   }, []);
 

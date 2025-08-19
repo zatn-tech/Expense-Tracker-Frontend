@@ -133,7 +133,6 @@ function Dashboard() {
       
       calculateMonthlyStats(transactionArray);
     } catch (err) {
-      console.error('Error fetching transactions:', err);
       if (err.response?.status === 403) {
         // Access denied handled by redirect
         // Redirect to auth page instead of calling logout
@@ -171,7 +170,7 @@ function Dashboard() {
         });
       }
     } catch (err) {
-      console.error('Error fetching stats only:', err);
+      // Stats fetch failed - handled silently
     }
   }, [token, userId]);
 
@@ -187,7 +186,6 @@ function Dashboard() {
         setAccounts(response.data.data || []);
       }
     } catch (err) {
-      console.error('Error fetching accounts:', err);
       setAccounts([]);
     }
   }, [token, userId]);
@@ -626,7 +624,6 @@ function Dashboard() {
                   transactions.slice(0, 3).map((transaction) => {
                     // Safety check for transaction properties
                     if (!transaction || typeof transaction !== 'object') {
-                      console.warn('⚠️ Invalid transaction object:', transaction);
                       return null;
                     }
                     
