@@ -1,10 +1,11 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { AuthContext } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useConfirmation } from '../hooks/useConfirmation';
 import ConfirmationDialog from './ui/ConfirmationDialog';
+import EditTransaction from './EditTransaction';
 
 function formatINR(amount) {
   return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
@@ -29,10 +30,11 @@ function getCategoryIcon(category) {
   return categoryIcons[category] || '📝';
 }
 
-function TransactionList({ transactions, onDelete, userId }) {
+function TransactionList({ transactions, onDelete, onUpdate, userId }) {
   const { token } = useContext(AuthContext);
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const { confirmation, showConfirmation, hideConfirmation } = useConfirmation();
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   const handleDelete = async (transactionId) => {
     showConfirmation({
@@ -257,16 +259,30 @@ function TransactionList({ transactions, onDelete, userId }) {
                       )}
                     </div>
                     
-                    {/* Delete Button */}
-                    <button
-                      onClick={() => handleDelete(txn._id)}
-                      className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                      title="Delete transaction"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                    {/* Action Buttons */}
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                      {/* Edit Button */}
+                      <button
+                        onClick={() => setEditingTransaction(txn)}
+                        className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        title="Edit transaction"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => handleDelete(txn._id)}
+                        className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                        title="Delete transaction"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -286,6 +302,20 @@ function TransactionList({ transactions, onDelete, userId }) {
         cancelText={confirmation.cancelText}
         type={confirmation.type}
       />
+
+      {/* Edit Transaction Modal */}
+      {editingTransaction && (
+        <EditTransaction
+          transaction={editingTransaction}
+          onClose={() => setEditingTransaction(null)}
+          onUpdate={(updatedTransaction) => {
+            if (onUpdate) {
+              onUpdate(updatedTransaction);
+            }
+            setEditingTransaction(null);
+          }}
+        />
+      )}
     </div>
   );
 }

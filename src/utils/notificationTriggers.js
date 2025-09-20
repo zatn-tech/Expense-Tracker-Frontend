@@ -1,5 +1,6 @@
 // Notification trigger functions for different types of notifications
 import { ensureNotificationPermission } from './budgetNotificationTrigger';
+import { API_ENDPOINTS } from '../config/api';
 
 // Helper function to get user token
 const getUserToken = () => {

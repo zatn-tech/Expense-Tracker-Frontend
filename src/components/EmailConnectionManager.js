@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNotification } from '../context/NotificationContext';
 import { useMobile } from '../hooks/useMobile';
 import { useParams } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
@@ -9,6 +10,7 @@ import AccountSelector from './AccountSelector';
 const EmailConnectionManager = () => {
   const { user, token } = useAuth();
   const { theme } = useTheme();
+  const { showSuccess, showError, showInfo } = useNotification();
   const isMobile = useMobile();
   const { userId } = useParams();
   
@@ -24,15 +26,34 @@ const EmailConnectionManager = () => {
   // New states for transaction management
   const [rejectingTransaction, setRejectingTransaction] = useState(null);
   const [scanningEmails, setScanningEmails] = useState(false);
+  const [scanController, setScanController] = useState(null);
   const [modifyingTransaction, setModifyingTransaction] = useState(null);
   const [showModifyForm, setShowModifyForm] = useState(false);
   const [modifyFormData, setModifyFormData] = useState({});
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showScanOptions, setShowScanOptions] = useState(false);
+  const [currentConnectionId, setCurrentConnectionId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [scanOptions, setScanOptions] = useState({
+    maxEmails: 50,
+    scanDays: 7,
+    customKeywords: {
+      success: [],
+      failure: [],
+      pending: []
+    }
+  });
   
   const [formData, setFormData] = useState({
     email: '',
     oauth2: {},
-    imap: {},
+    imap: {
+      host: '',
+      port: 993,
+      secure: true,
+      username: '',
+      password: ''
+    },
     syncSettings: {
       enabled: true,
       frequency: 'daily',
@@ -40,7 +61,13 @@ const EmailConnectionManager = () => {
       autoCreateTransactions: false,
       categories: [],
       minAmount: 0,
-      maxAmount: 1000000
+      maxAmount: 1000000,
+      maxEmailsPerScan: 50,
+      scanKeywords: {
+        success: ['successful', 'completed', 'confirmed', 'approved', 'success', 'successfully'],
+        failure: ['failed', 'declined', 'rejected', 'unsuccessful', 'error', 'cancelled', 'cancelled'],
+        pending: ['pending', 'processing', 'in progress', 'awaiting', 'pending approval']
+      }
     }
   });
 
@@ -58,6 +85,13 @@ const EmailConnectionManager = () => {
       fetchEmailTransactions();
     }
   }, [userId, token, user]);
+
+  // Refetch email transactions when status filter changes
+  useEffect(() => {
+    if (userId && token && user && userId === user._id) {
+      fetchEmailTransactions();
+    }
+  }, [statusFilter]);
 
   const fetchConnections = async () => {
     if (!token || !userId || !user || userId !== user._id) return;
@@ -81,7 +115,14 @@ const EmailConnectionManager = () => {
     if (!token || !userId || !user || userId !== user._id) return;
     
     try {
-      const response = await fetch(`${API_ENDPOINTS.USER_EMAIL_TRANSACTIONS(userId)}?status=pending&limit=20`, {
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('limit', '50');
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+      
+      const response = await fetch(`${API_ENDPOINTS.USER_EMAIL_TRANSACTIONS(userId)}?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -120,7 +161,13 @@ const EmailConnectionManager = () => {
         setFormData({
           email: '',
           oauth2: {},
-          imap: {},
+          imap: {
+            host: '',
+            port: 993,
+            secure: true,
+            username: '',
+            password: ''
+          },
           syncSettings: {
             enabled: true,
             frequency: 'daily',
@@ -134,44 +181,160 @@ const EmailConnectionManager = () => {
 
         setSelectedProvider('custom'); // Reset to custom provider
         fetchConnections();
-        alert('Email connection added successfully!');
+        showSuccess('Email connection added successfully!');
       } else {
         // Show error message to user
-        alert(`Error: ${data.message || 'Failed to add connection'}`);
+        showError(`Error: ${data.message || 'Failed to add connection'}`);
       }
     } catch (error) {
       // Error adding connection
-      alert('Error adding connection. Please try again.');
+      showError('Error adding connection. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleScanEmails = async () => {
+  const handleScanEmails = async (connectionId) => {
     if (!token || !userId || !user || userId !== user._id) return;
     
     setScanningEmails(true);
     
+    // Create AbortController for timeout and cancellation
+    const controller = new AbortController();
+    setScanController(controller);
+    
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 120000); // 2 minute timeout
+    
     try {
-      const response = await fetch(API_ENDPOINTS.USER_EMAIL_SCAN(userId), {
+      showInfo('Email scan started. This may take a few minutes.');
+      
+      const response = await fetch(API_ENDPOINTS.USER_EMAIL_CONNECTION_SCAN(userId, connectionId), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
+      
       if (data.status === 'success') {
         fetchEmailTransactions();
-        alert(`Scan completed! Found ${data.data.transactionsDetected} transactions.`);
+        showSuccess(`Scan completed! Emails scanned: ${data.data.emailsScanned}, Transactions detected: ${data.data.transactionsDetected}`);
       } else {
-        alert(`Scan failed: ${data.message || 'Unknown error'}`);
+        showError(`Scan failed: ${data.message || 'Unknown error'}`);
       }
     } catch (error) {
-      // Error scanning emails
-      alert('Error scanning emails. Please try again.');
+      clearTimeout(timeoutId);
+      
+      let errorMessage = 'Error scanning emails. Please try again.';
+      
+      if (error.name === 'AbortError') {
+        if (scanController && scanController.signal.aborted) {
+          errorMessage = 'Email scan was cancelled.';
+        } else {
+          errorMessage = 'Email scan timed out after 2 minutes. This can happen when the email server is slow or overloaded.';
+        }
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Connection timeout occurred. The email server took too long to respond.';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Network connection error. Could not connect to the server.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
     } finally {
+      clearTimeout(timeoutId);
       setScanningEmails(false);
+      setScanController(null);
+    }
+  };
+
+  const handleCancelScan = () => {
+    if (scanController) {
+      scanController.abort();
+      setScanController(null);
+      setScanningEmails(false);
+    }
+  };
+
+  const handleScanEmailsWithOptions = async (connectionId, options) => {
+    if (!token || !userId || !user || userId !== user._id) return;
+    
+    setScanningEmails(true);
+    
+    // Create AbortController for timeout and cancellation
+    const controller = new AbortController();
+    setScanController(controller);
+    
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 120000); // 2 minute timeout
+    
+    try {
+      showInfo(`Email scan started with custom options. Max emails: ${options.maxEmails}, Days back: ${options.scanDays}`);
+      
+      const response = await fetch(API_ENDPOINTS.USER_EMAIL_CONNECTION_SCAN(userId,connectionId), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          scanOptions: options
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        fetchEmailTransactions();
+        showSuccess(`Scan completed! Emails scanned: ${data.data.emailsScanned}, Transactions detected: ${data.data.transactionsDetected}`);
+      } else {
+        showError(`Scan failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      let errorMessage = 'Error scanning emails. Please try again.';
+      
+      if (error.name === 'AbortError') {
+        if (scanController && scanController.signal.aborted) {
+          errorMessage = `🛑 Email scan was cancelled.`;
+        } else {
+          errorMessage = `⏱️ Email scan timed out after 2 minutes.\n\nThis can happen when:\n• Email server is slow or overloaded\n• Large number of emails to process\n• Network connection issues\n\nPlease try again or check your email connection settings.`;
+        }
+      } else if (error.message.includes('timeout')) {
+        errorMessage = `⏱️ Connection timeout occurred.\n\nThe email server took too long to respond. This is usually temporary.\n\nPlease wait a few minutes and try again.`;
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = `🌐 Network connection error.\n\nCould not connect to the server. Please check your internet connection and try again.`;
+      } else if (error.message) {
+        errorMessage = `❌ ${error.message}`;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      clearTimeout(timeoutId);
+      setScanningEmails(false);
+      setScanController(null);
     }
   };
 
@@ -202,13 +365,13 @@ const EmailConnectionManager = () => {
       const data = await response.json();
       if (data.status === 'success') {
         fetchEmailTransactions();
-        alert('Transaction rejected!');
+        showSuccess('Transaction rejected!');
       } else {
-        alert(`Rejection failed: ${data.message || 'Unknown error'}`);
+        showError(`Rejection failed: ${data.message || 'Unknown error'}`);
       }
     } catch (error) {
       // Error rejecting transaction
-      alert('Error rejecting transaction. Please try again.');
+      showError('Error rejecting transaction. Please try again.');
     } finally {
       setRejectingTransaction(null);
     }
@@ -227,12 +390,31 @@ const EmailConnectionManager = () => {
     setShowModifyForm(true);
   };
 
-  const handleSaveModification = async () => {
+  const handleSaveModification = async (e) => {
+    e.preventDefault(); // Prevent form submission and page reload
+    
+    console.log('Form submitted, preventing default behavior');
+    console.log('Modifying transaction:', modifyingTransaction);
+    console.log('Form data:', modifyFormData);
+    
     if (!token || !userId || !user || userId !== user._id || !modifyingTransaction) return;
     
-    if (!modifyFormData.accountId) {
-      alert('Please select an account');
-      return;
+    // Validation based on action type
+    if (modifyingTransaction.action === 'approve') {
+      if (!modifyFormData.accountId) {
+        showError('Please select an account');
+        return;
+      }
+    } else {
+      // For modification, validate required fields
+      if (!modifyFormData.amount || !modifyFormData.type || !modifyFormData.category) {
+        showError('Please fill in all required fields (amount, type, category)');
+        return;
+      }
+      if (!modifyFormData.accountId) {
+        showError('Please select an account');
+        return;
+      }
     }
     
     setLoading(true);
@@ -254,12 +436,14 @@ const EmailConnectionManager = () => {
           setShowModifyForm(false);
           setModifyingTransaction(null);
           fetchEmailTransactions();
-          alert('Transaction approved and created!');
+          showSuccess('Transaction approved and created!');
         } else {
-          alert(`Approval failed: ${data.message || 'Unknown error'}`);
+          showError(`Approval failed: ${data.message || 'Unknown error'}`);
         }
       } else {
         // Handle modification
+        console.log('Modifying transaction:', modifyingTransaction._id, 'with data:', modifyFormData);
+        
         const response = await fetch(API_ENDPOINTS.USER_EMAIL_TRANSACTION_MODIFY(userId, modifyingTransaction._id), {
           method: 'PUT',
           headers: {
@@ -270,18 +454,21 @@ const EmailConnectionManager = () => {
         });
         
         const data = await response.json();
+        console.log('Modify response:', data);
+        
         if (data.status === 'success') {
           setShowModifyForm(false);
           setModifyingTransaction(null);
           fetchEmailTransactions();
-          alert('Transaction modified successfully!');
+          showSuccess('Transaction modified successfully!');
         } else {
-          alert(`Modification failed: ${data.message || 'Unknown error'}`);
+          console.error('Modification failed:', data);
+          showError(`Modification failed: ${data.message || 'Unknown error'}`);
         }
       }
     } catch (error) {
-      // Error processing transaction
-      alert('Error processing transaction. Please try again.');
+      console.error('Error processing transaction:', error);
+      showError(`Error processing transaction: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -334,7 +521,13 @@ const EmailConnectionManager = () => {
         setFormData({
           email: '',
           oauth2: {},
-          imap: {},
+          imap: {
+            host: '',
+            port: 993,
+            secure: true,
+            username: '',
+            password: ''
+          },
           syncSettings: {
             enabled: true,
             frequency: 'daily',
@@ -347,13 +540,13 @@ const EmailConnectionManager = () => {
         });
         setSelectedProvider('custom');
         fetchConnections();
-        alert('Email connection updated successfully!');
+        showSuccess('Email connection updated successfully!');
       } else {
-        alert(`Error: ${data.message || 'Failed to update connection'}`);
+        showError(`Error: ${data.message || 'Failed to update connection'}`);
       }
     } catch (error) {
       // Error updating connection
-      alert('Error updating connection. Please try again.');
+      showError('Error updating connection. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -362,7 +555,7 @@ const EmailConnectionManager = () => {
   const handleDeleteConnection = async (connectionId) => {
     if (!token || !userId || !user || userId !== user._id) return;
     
-    if (!window.confirm('Are you sure you want to delete this email connection? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to delete this email connection?\n\n⚠️  This will also delete ALL associated email transactions and detected transactions.\n\nThis action cannot be undone.')) {
       return;
     }
     
@@ -377,13 +570,15 @@ const EmailConnectionManager = () => {
       const data = await response.json();
       if (data.status === 'success') {
         fetchConnections();
-        alert('Email connection deleted successfully!');
+        // Also refresh email transactions since some were deleted
+        fetchEmailTransactions();
+        showSuccess(data.message || 'Email connection and associated transactions deleted successfully!');
       } else {
-        alert(`Error: ${data.message || 'Failed to delete connection'}`);
+        showError(`Error: ${data.message || 'Failed to delete connection'}`);
       }
     } catch (error) {
       // Error deleting connection
-      alert('Error deleting connection. Please try again.');
+      showError('Error deleting connection. Please try again.');
     }
   };
 
@@ -511,8 +706,8 @@ const EmailConnectionManager = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
               <input
                 type="text"
-                value={formData.imap.user || ''}
-                onChange={(e) => setFormData({...formData, imap: {...formData.imap, user: e.target.value}})}
+                value={formData.imap.username || ''}
+                onChange={(e) => setFormData({...formData, imap: {...formData.imap, username: e.target.value}})}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                   theme === 'dark' 
                     ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
@@ -528,8 +723,8 @@ const EmailConnectionManager = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
               <input
                 type="password"
-                value={formData.imap.pass || ''}
-                onChange={(e) => setFormData({...formData, imap: {...formData.imap, pass: e.target.value}})}
+                value={formData.imap.password || ''}
+                onChange={(e) => setFormData({...formData, imap: {...formData.imap, password: e.target.value}})}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                   theme === 'dark' 
                     ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
@@ -637,6 +832,112 @@ const EmailConnectionManager = () => {
           Automatically create transactions (high confidence only)
         </label>
       </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Emails Per Scan</label>
+        <input
+          type="number"
+          min="10"
+          max="500"
+          value={formData.syncSettings.maxEmailsPerScan}
+          onChange={(e) => setFormData({
+            ...formData,
+            syncSettings: {...formData.syncSettings, maxEmailsPerScan: parseInt(e.target.value)}
+          })}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+            theme === 'dark' 
+              ? 'bg-gray-600 border-gray-500 text-white' 
+              : 'bg-white border-gray-300 text-gray-900'
+          }`}
+        />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          💡 Lower numbers = faster scans, higher numbers = more comprehensive results
+        </p>
+      </div>
+      
+      {/* Keyword Settings */}
+      <div className={`p-4 rounded-lg border ${
+        theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+      }`}>
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Transaction Status Keywords</h4>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Customize keywords to automatically detect transaction status from emails
+        </p>
+        
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Success Keywords</label>
+            <input
+              type="text"
+              value={formData.syncSettings.scanKeywords.success.join(', ')}
+              onChange={(e) => setFormData({
+                ...formData,
+                syncSettings: {
+                  ...formData.syncSettings,
+                  scanKeywords: {
+                    ...formData.syncSettings.scanKeywords,
+                    success: e.target.value.split(',').map(k => k.trim()).filter(k => k)
+                  }
+                }
+              })}
+              placeholder="successful, completed, confirmed, approved"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm ${
+                theme === 'dark' 
+                  ? 'bg-gray-600 border-gray-500 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Failure Keywords</label>
+            <input
+              type="text"
+              value={formData.syncSettings.scanKeywords.failure.join(', ')}
+              onChange={(e) => setFormData({
+                ...formData,
+                syncSettings: {
+                  ...formData.syncSettings,
+                  scanKeywords: {
+                    ...formData.syncSettings.scanKeywords,
+                    failure: e.target.value.split(',').map(k => k.trim()).filter(k => k)
+                  }
+                }
+              })}
+              placeholder="failed, declined, rejected, error, cancelled"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm ${
+                theme === 'dark' 
+                  ? 'bg-gray-600 border-gray-500 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pending Keywords</label>
+            <input
+              type="text"
+              value={formData.syncSettings.scanKeywords.pending.join(', ')}
+              onChange={(e) => setFormData({
+                ...formData,
+                syncSettings: {
+                  ...formData.syncSettings,
+                  scanKeywords: {
+                    ...formData.syncSettings.scanKeywords,
+                    pending: e.target.value.split(',').map(k => k.trim()).filter(k => k)
+                  }
+                }
+              })}
+              placeholder="pending, processing, in progress, awaiting"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm ${
+                theme === 'dark' 
+                  ? 'bg-gray-600 border-gray-500 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 
@@ -724,15 +1025,53 @@ const EmailConnectionManager = () => {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleScanEmails(connection._id)}
-                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
-                        title="Scan emails for this connection"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      </button>
+                      {scanningEmails ? (
+                        <div className="flex items-center space-x-2">
+                          <button
+                            disabled
+                            className="flex items-center space-x-2 px-3 py-2 text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+                            title="Scanning emails..."
+                          >
+                            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span className="text-sm font-medium">Scanning...</span>
+                          </button>
+                          <button
+                            onClick={handleCancelScan}
+                            className="px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+                            title="Cancel scan"
+                          >
+                            <span className="text-sm font-medium">Cancel</span>
+                          </button>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            This may take 1-2 minutes
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setCurrentConnectionId(connection._id);
+                            setScanOptions({
+                              maxEmails: connection.syncSettings?.maxEmailsPerScan || 50,
+                              scanDays: connection.syncSettings?.scanDays || 7,
+                              customKeywords: connection.syncSettings?.scanKeywords || {
+                                success: ['successful', 'completed', 'confirmed'],
+                                failure: ['failed', 'declined', 'rejected'],
+                                pending: ['pending', 'processing', 'awaiting']
+                              }
+                            });
+                            setShowScanOptions(true);
+                          }}
+                          className="flex items-center space-x-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+                          title="Scan emails for this connection"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          <span className="text-sm font-medium">Scan</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEditConnection(connection)}
                         className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
@@ -786,9 +1125,38 @@ const EmailConnectionManager = () => {
         {/* Email Transactions */}
         <div className="mt-12">
           <div className="mb-6">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Detected Transactions</h3>
-              <p className="text-gray-600 dark:text-gray-400">Review and process transactions found in your emails</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Detected Transactions</h3>
+                <p className="text-gray-600 dark:text-gray-400">Review and process transactions found in your emails</p>
+              </div>
+              
+              {/* Status Filter */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Filter by status:</span>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className={`px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                      theme === 'dark' 
+                        ? 'bg-gray-600 border-gray-500 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">⏳ Pending</option>
+                    <option value="approved">✅ Success</option>
+                    <option value="rejected">❌ Failed</option>
+                    <option value="modified">✏️ Modified</option>
+                  </select>
+                </div>
+                
+                {/* Transaction Count */}
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {emailTransactions.filter(t => statusFilter === 'all' || t.status === statusFilter).length} of {emailTransactions.length} transactions
+                </div>
+              </div>
             </div>
           </div>
           
@@ -807,7 +1175,11 @@ const EmailConnectionManager = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {emailTransactions.map((transaction) => (
+              {emailTransactions
+                .filter(transaction => 
+                  statusFilter === 'all' || transaction.status === statusFilter
+                )
+                .map((transaction) => (
                 <div
                   key={transaction._id}
                   className={`p-6 rounded-xl border transition-all duration-200 hover:shadow-lg ${
@@ -835,6 +1207,20 @@ const EmailConnectionManager = () => {
                           : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                       }`}>
                         {transaction.confidence.overall}% confidence
+                      </span>
+                      <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                        transaction.status === 'approved' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                          : transaction.status === 'rejected'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                          : transaction.status === 'modified'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      }`}>
+                        {transaction.status === 'approved' ? '✅ Success' : 
+                         transaction.status === 'rejected' ? '❌ Failed' : 
+                         transaction.status === 'modified' ? '✏️ Modified' : 
+                         '⏳ Pending'}
                       </span>
                     </div>
                   </div>
@@ -1154,7 +1540,7 @@ const EmailConnectionManager = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className={`w-full max-w-md ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 max-h-[90vh] overflow-y-auto`}>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                   {modifyingTransaction.action === 'approve' ? 'Approve Transaction' : 'Modify Transaction'}
                 </h3>
                 <button
@@ -1164,7 +1550,7 @@ const EmailConnectionManager = () => {
                     // Reset form data
                     setModifyFormData({});
                   }}
-                  className="text-gray-500 hover:text-gray-700"
+                  className={`text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200`}
                 >
                   ✕
                 </button>
@@ -1174,7 +1560,7 @@ const EmailConnectionManager = () => {
                 {modifyingTransaction.action === 'approve' ? (
                   // Approval form - only account selection
                   <div>
-                    <label className="block text-sm font-medium mb-2">Select Account</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Account</label>
                     <AccountSelector
                       selectedAccountId={modifyFormData.accountId}
                       onAccountChange={(accountId) => setModifyFormData({...modifyFormData, accountId: accountId})}
@@ -1185,21 +1571,29 @@ const EmailConnectionManager = () => {
                   // Modification form - all fields
                   <>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Amount</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount</label>
                       <input
                         type="number"
                         value={modifyFormData.amount}
                         onChange={(e) => setModifyFormData({...modifyFormData, amount: parseFloat(e.target.value)})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                        }`}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Type</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
                       <select
                         value={modifyFormData.type}
                         onChange={(e) => setModifyFormData({...modifyFormData, type: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-600 border-gray-500 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
                         required
                       >
                         <option value="expense">Expense</option>
@@ -1207,31 +1601,43 @@ const EmailConnectionManager = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Category</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
                       <input
                         type="text"
                         value={modifyFormData.category}
                         onChange={(e) => setModifyFormData({...modifyFormData, category: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                        }`}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Description</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
                       <input
                         type="text"
                         value={modifyFormData.description}
                         onChange={(e) => setModifyFormData({...modifyFormData, description: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                        }`}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Date</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date</label>
                       <input
                         type="date"
                         value={modifyFormData.date}
                         onChange={(e) => setModifyFormData({...modifyFormData, date: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                          theme === 'dark' 
+                            ? 'bg-gray-600 border-gray-500 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
                         required
                       />
                     </div>
@@ -1538,6 +1944,102 @@ const EmailConnectionManager = () => {
                 >
                   Got it!
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Scan Options Modal */}
+      {showScanOptions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`max-w-md w-full mx-4 p-6 rounded-xl shadow-xl ${
+            theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Scan Options</h3>
+              <button
+                onClick={() => setShowScanOptions(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Max Emails to Scan
+                </label>
+                <input
+                  type="number"
+                  min="10"
+                  max="500"
+                  value={scanOptions.maxEmails}
+                  onChange={(e) => setScanOptions({
+                    ...scanOptions,
+                    maxEmails: parseInt(e.target.value)
+                  })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  💡 Lower = faster, higher = more comprehensive
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Days Back to Scan
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={scanOptions.scanDays}
+                  onChange={(e) => setScanOptions({
+                    ...scanOptions,
+                    scanDays: parseInt(e.target.value)
+                  })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                />
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowScanOptions(false)}
+                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200"
+                  >
+                    Cancel
+                  </button>
+                                      <button
+                      onClick={() => {
+                        setShowScanOptions(false);
+                        // Start scan with custom options
+                        if (currentConnectionId) {
+                          handleScanEmailsWithOptions(currentConnectionId, scanOptions);
+                        }
+                      }}
+                      disabled={!currentConnectionId}
+                      className={`flex-1 px-4 py-2 rounded-lg transition-colors duration-200 ${
+                        currentConnectionId 
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                          : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                      }`}
+                    >
+                      Start Scan
+                    </button>
+                </div>
               </div>
             </div>
           </div>

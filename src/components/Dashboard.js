@@ -57,8 +57,12 @@ function Dashboard() {
     isFetchingRef.current = true;
     setLoading(true);
     try {
-      // First, get accurate stats from the stats endpoint
-      const statsUrl = `${API_ENDPOINTS.USER_TRANSACTIONS(userId).replace('/transactions', '/transactions/stats')}`;
+      // First, get current month stats from the stats endpoint
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      
+      const statsUrl = `${API_ENDPOINTS.USER_TRANSACTIONS(userId).replace('/transactions', '/transactions/stats')}?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`;
       
       const statsRes = await axios.get(statsUrl, {
         headers: { Authorization: `Bearer ${token}` }
@@ -311,6 +315,15 @@ function Dashboard() {
     calculateMonthlyStats(updatedTransactions);
   };
 
+  const handleTransactionUpdate = (updatedTransaction) => {
+    const updatedTransactions = transactions.map(t => 
+      t._id === updatedTransaction._id ? updatedTransaction : t
+    );
+    setTransactions(updatedTransactions);
+    calculateStats(updatedTransactions);
+    calculateMonthlyStats(updatedTransactions);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
@@ -380,12 +393,18 @@ function Dashboard() {
                 +2.5%
               </span>
             </div>
-            <h3 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-500 dark:text-gray-400 mb-3"}>Total Income</h3>
+            <h3 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-500 dark:text-gray-400 mb-3"}>Income This Month</h3>
             <p className={`${TYPOGRAPHY.AMOUNT} text-gray-900 dark:text-white mb-3`}>
               ₹{stats.totalIncome.toLocaleString('en-IN')}
             </p>
             <p className={TYPOGRAPHY.BODY_XS + " text-gray-500 dark:text-gray-400"}>
-              {transactions.filter(t => t.type === 'income').length} transactions this month
+              {transactions.filter(t => {
+                if (t.type !== 'income') return false;
+                const transactionDate = new Date(t.transactionDate || t.createdAt);
+                const now = new Date();
+                return transactionDate.getMonth() === now.getMonth() && 
+                       transactionDate.getFullYear() === now.getFullYear();
+              }).length} transactions this month
             </p>
           </div>
 
@@ -401,12 +420,18 @@ function Dashboard() {
                 +1.2%
               </span>
             </div>
-            <h3 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-500 dark:text-gray-400 mb-3"}>Total Expenses</h3>
+            <h3 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-500 dark:text-gray-400 mb-3"}>Expenses This Month</h3>
             <p className={`${TYPOGRAPHY.AMOUNT} text-gray-900 dark:text-white mb-3`}>
               ₹{stats.totalExpenses.toLocaleString('en-IN')}
             </p>
             <p className={TYPOGRAPHY.BODY_XS + " text-gray-500 dark:text-gray-400"}>
-              {transactions.filter(t => t.type === 'expense').length} transactions this month
+              {transactions.filter(t => {
+                if (t.type !== 'expense') return false;
+                const transactionDate = new Date(t.transactionDate || t.createdAt);
+                const now = new Date();
+                return transactionDate.getMonth() === now.getMonth() && 
+                       transactionDate.getFullYear() === now.getFullYear();
+              }).length} transactions this month
             </p>
           </div>
 
@@ -726,6 +751,7 @@ function Dashboard() {
               <TransactionList 
                 transactions={filteredTransactions} 
                 onDelete={handleDelete}
+                onUpdate={handleTransactionUpdate}
                 userId={userId}
               />
             </div>
