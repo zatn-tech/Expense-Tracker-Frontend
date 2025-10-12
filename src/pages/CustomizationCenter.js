@@ -12,11 +12,13 @@ import {
 } from '../services/userPreferencesService';
 import { useTheme } from '../context/ThemeContext';
 import { useUserPreferences } from '../context/UserPreferencesContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const CustomizationCenter = () => {
   const { theme, setThemeMode } = useTheme();
   const { preferences, loading: contextLoading, updatePreferences: updateContextPreferences } = useUserPreferences();
+  const { user } = useAuth();
   const [localPreferences, setLocalPreferences] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -38,7 +40,7 @@ const CustomizationCenter = () => {
   const updatePreferences = useCallback(async (section, data) => {
     try {
       setSaving(true);
-      const response = await updatePreferencesSection(section, data);
+      const response = await updatePreferencesSection(user._id, section, data);
       if (response.status === 'success') {
         const newPreferences = { ...currentPreferences, [section]: { ...currentPreferences[section], ...data } };
         setLocalPreferences(newPreferences);
@@ -55,14 +57,14 @@ const CustomizationCenter = () => {
     } finally {
       setSaving(false);
     }
-  }, [currentPreferences, setThemeMode, updateContextPreferences]);
+  }, [currentPreferences, setThemeMode, updateContextPreferences, user._id]);
 
   // Reset to defaults
   const handleReset = async () => {
     if (window.confirm('Are you sure you want to reset all preferences to defaults?')) {
       try {
         setSaving(true);
-        const response = await resetPreferences();
+        const response = await resetPreferences(user._id);
         if (response.status === 'success') {
           setLocalPreferences(defaultPreferences);
           applyCSSVariables(defaultPreferences);
@@ -79,7 +81,7 @@ const CustomizationCenter = () => {
   // Export preferences
   const handleExport = async () => {
     try {
-      const response = await exportPreferences();
+      const response = await exportPreferences(user._id);
       const dataStr = JSON.stringify(response.data.preferences, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
@@ -101,7 +103,7 @@ const CustomizationCenter = () => {
       reader.onload = async (e) => {
         try {
           const importedPreferences = JSON.parse(e.target.result);
-          const response = await importPreferences(importedPreferences);
+          const response = await importPreferences(user._id, importedPreferences);
           if (response.status === 'success') {
             setLocalPreferences(response.data.preferences);
             applyCSSVariables(response.data.preferences);
