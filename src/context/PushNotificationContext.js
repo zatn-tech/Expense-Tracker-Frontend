@@ -44,7 +44,6 @@ export const PushNotificationProvider = ({ children }) => {
       setPermission(result);
       return result;
     } catch (error) {
-      console.error('Error requesting notification permission:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -54,7 +53,6 @@ export const PushNotificationProvider = ({ children }) => {
   // Register service worker - DISABLED to prevent hot reload issues
   const registerServiceWorker = async () => {
     // Service worker registration disabled to prevent hot reload issues
-    console.log('Service worker registration disabled');
     return null;
   };
 
@@ -117,7 +115,6 @@ export const PushNotificationProvider = ({ children }) => {
         setSubscription(null);
         return true;
       } catch (error) {
-        console.error('Error unsubscribing from browser notifications:', error);
         throw error;
       }
     }
@@ -151,7 +148,6 @@ export const PushNotificationProvider = ({ children }) => {
 
       return await response.json();
     } catch (error) {
-      console.error('Error sending subscription to backend:', error);
       throw error;
     }
   };
@@ -179,7 +175,6 @@ export const PushNotificationProvider = ({ children }) => {
       
       return true;
     } catch (error) {
-      console.error('Error initializing push notifications:', error);
       return false;
     }
   };
@@ -222,7 +217,6 @@ export const PushNotificationProvider = ({ children }) => {
         throw new Error('Browser notification permission denied. Please enable notifications in your browser settings.');
       }
     } catch (error) {
-      console.error('Error sending test notification:', error);
       throw error;
     }
   };
@@ -252,7 +246,6 @@ export const PushNotificationProvider = ({ children }) => {
 
       return await response.json();
     } catch (error) {
-      console.error('Error updating notification preferences:', error);
       throw error;
     }
   };
@@ -281,7 +274,6 @@ export const PushNotificationProvider = ({ children }) => {
 // Helper function to convert VAPID key
 function urlBase64ToUint8Array(base64String) {
   try {
-    console.log('Converting VAPID key:', base64String);
     
     // Remove any whitespace
     const cleanString = base64String.trim();
@@ -292,7 +284,6 @@ function urlBase64ToUint8Array(base64String) {
       .replace(/-/g, '+')
       .replace(/_/g, '/');
 
-    console.log('Base64 after padding and replacement:', base64);
     
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
@@ -301,10 +292,8 @@ function urlBase64ToUint8Array(base64String) {
       outputArray[i] = rawData.charCodeAt(i);
     }
     
-    console.log('Converted to Uint8Array, length:', outputArray.length);
     return outputArray;
   } catch (error) {
-    console.error('Error converting VAPID key:', error);
     throw new Error('Invalid VAPID key format: ' + error.message);
   }
 } 

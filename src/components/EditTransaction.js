@@ -146,7 +146,6 @@ function EditTransaction({ transaction, onClose, onUpdate }) {
         showError(response.data.message || 'Failed to update transaction');
       }
     } catch (err) {
-      console.error('Update error:', err);
       showError('Failed to update transaction: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);

@@ -53,7 +53,6 @@ const RecurringTransactionManager = () => {
         income: incomeCategories.data
       });
     } catch (error) {
-      console.error('Error fetching categories:', error);
     }
   };
 
@@ -73,7 +72,6 @@ const RecurringTransactionManager = () => {
       });
       setRecurringTransactions(response.data);
     } catch (error) {
-      console.error('Error fetching recurring transactions:', error);
       setError('Failed to fetch recurring transactions');
     } finally {
       setLoading(false);
@@ -108,7 +106,6 @@ const RecurringTransactionManager = () => {
       fetchRecurringTransactions();
       showSuccess('Recurring transaction created successfully!');
     } catch (error) {
-      console.error('Error saving recurring transaction:', error);
       showError(error.response?.data?.message || 'Failed to save recurring transaction');
     }
   };
@@ -128,7 +125,6 @@ const RecurringTransactionManager = () => {
           fetchRecurringTransactions();
           showSuccess('Recurring transaction deleted successfully!');
         } catch (error) {
-          console.error('Error deleting recurring transaction:', error);
           showError('Failed to delete recurring transaction');
         }
       }
@@ -149,7 +145,6 @@ const RecurringTransactionManager = () => {
         showInfo('No recurring transactions were due for processing.');
       }
     } catch (error) {
-      console.error('Error processing recurring transactions:', error);
       showError('Failed to process recurring transactions');
     } finally {
       setProcessing(false);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 
-const SocialLogin = ({ onSuccess, onError }) => {
+const SocialLogin = ({ onSuccess, onError, rememberMe = false }) => {
   const [providers, setProviders] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -13,7 +13,6 @@ const SocialLogin = ({ onSuccess, onError }) => {
         const response = await axios.get(API_ENDPOINTS.SOCIAL_AUTH_STATUS);
         setProviders(response.data);
       } catch (error) {
-        console.error('Error checking social providers:', error);
       }
     };
     
@@ -23,44 +22,14 @@ const SocialLogin = ({ onSuccess, onError }) => {
   const handleSocialLogin = (provider) => {
     setLoading(true);
     
+    // Store remember me preference in sessionStorage before redirect
+    sessionStorage.setItem('socialRememberMe', rememberMe.toString());
+    
     // Redirect to the social auth endpoint
     const authUrl = `${API_ENDPOINTS[`${provider.toUpperCase()}_AUTH`]}`;
     window.location.href = authUrl;
   };
 
-  const handleAuthCallback = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const user = urlParams.get('user');
-
-    if (token && user) {
-      try {
-        const userData = JSON.parse(decodeURIComponent(user));
-        
-        // Store token and user data
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(userData));
-        
-        // Clear URL parameters
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Call success callback
-        if (onSuccess) {
-          onSuccess({ token, user: userData });
-        }
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        if (onError) {
-          onError('Failed to authenticate with social provider');
-        }
-      }
-    }
-  };
-
-  // Handle auth callback on component mount
-  useEffect(() => {
-    handleAuthCallback();
-  }, []);
 
   if (!providers.google && !providers.facebook && !providers.github) {
     return null; // Don't show social login if no providers are configured

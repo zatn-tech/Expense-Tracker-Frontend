@@ -130,27 +130,21 @@ const SetupPage = () => {
       }
       
       // Find first incomplete step
-      console.log('SetupPage - Setup status from API:', data.data.setupStatus);
-      console.log('SetupPage - Setup steps:', setupSteps.map(s => ({ id: s.id, title: s.title })));
       
       const firstIncompleteIndex = setupSteps.findIndex(step => {
         const isCompleted = data.data.setupStatus[step.id]?.completed;
-        console.log(`SetupPage - Step ${step.id} completed:`, isCompleted);
         return !isCompleted;
       });
       
-      console.log('SetupPage - First incomplete step index:', firstIncompleteIndex);
       
       if (firstIncompleteIndex !== -1) {
         setCurrentStep(firstIncompleteIndex);
       } else {
-        console.log('SetupPage - All steps completed, but setup not marked complete');
         // Fallback: if no incomplete steps found but setup not complete, 
         // set to last step (preferences)
         setCurrentStep(setupSteps.length - 1);
       }
     } catch (err) {
-      console.error('SetupPage - Error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -191,7 +185,6 @@ const SetupPage = () => {
         throw new Error(data.message || 'Failed to send verification email');
       }
     } catch (err) {
-      console.error('Error resending verification email:', err);
       setNotificationMessage(err.message || 'Failed to send verification email. Please try again.');
       setNotificationType('error');
       setShowNotification(true);
@@ -202,7 +195,6 @@ const SetupPage = () => {
 
   const completeSetupStep = async (stepId) => {
     try {
-      console.log('SetupPage - Completing step:', stepId);
       setIsTransitioning(true);
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
@@ -220,7 +212,6 @@ const SetupPage = () => {
       }
 
       const data = await response.json();
-      console.log('SetupPage - Step completion response:', data);
       
       // Show success notification
       setNotificationMessage('Step completed successfully!');
@@ -229,12 +220,10 @@ const SetupPage = () => {
       
       // Wait for animation
       setTimeout(() => {
-        console.log('SetupPage - Rechecking setup status after step completion');
         checkSetupStatus();
         setIsTransitioning(false);
       }, 500);
     } catch (err) {
-      console.error('SetupPage - Error completing step:', err);
       setNotificationMessage(err.message);
       setNotificationType('error');
       setShowNotification(true);

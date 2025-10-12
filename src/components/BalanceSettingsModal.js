@@ -53,9 +53,6 @@ const BalanceSettingsModal = ({ onClose, userId, accounts: dashboardAccounts, on
   ];
 
   useEffect(() => {
-    console.log('🔄 BalanceSettingsModal: useEffect triggered');
-    console.log('👤 User ID:', userId);
-    console.log('🏦 Accounts from dashboard:', accounts.length);
     fetchUserPreferences();
   }, []);
 
@@ -71,7 +68,6 @@ const BalanceSettingsModal = ({ onClose, userId, accounts: dashboardAccounts, on
         setPreferences(response.data.preferences.balanceDisplay);
       }
     } catch (error) {
-      console.error('Error fetching user preferences:', error);
       // Set default preferences if API call fails
       setPreferences({
         method: 'net_cash_flow',
@@ -107,13 +103,11 @@ const BalanceSettingsModal = ({ onClose, userId, accounts: dashboardAccounts, on
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      console.log('✅ Balance preferences updated successfully:', response.data);
       
       // Pass the new preferences back to parent for local update
       onUpdate(preferences);
       onClose();
     } catch (error) {
-      console.error('Error updating balance preferences:', error);
       alert('Failed to update preferences. Please try again.');
     } finally {
       setLoading(false);

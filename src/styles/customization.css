@@ -1,0 +1,386 @@
+/* Customization Center - Global CSS Variables */
+
+/* Theme Colors */
+:root {
+  --primary-color: #4F46E5;
+  --secondary-color: #7C3AED;
+  --accent-color: #10B981;
+  --background-color: #FFFFFF;
+  --text-color: #111827;
+  
+  /* Typography */
+  --font-family: "Inter", sans-serif;
+  --font-size: 1rem;
+  --font-weight: 400;
+  --line-height: 1.5;
+  
+  /* Layout */
+  --border-radius: 0.5rem;
+  --spacing: 1rem;
+  
+  /* Components */
+  --animation-duration: 0.3s;
+}
+
+/* Dark mode support */
+.dark {
+  --background-color: #1F2937;
+  --text-color: #F9FAFB;
+}
+
+/* Ensure dark mode works with customization */
+body.customization-active.dark {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Apply customization classes */
+.customizable-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.customizable-primary-text {
+  color: var(--primary-color) !important;
+}
+
+.customizable-primary-hover:hover {
+  background-color: var(--primary-color) !important;
+  opacity: 0.85 !important;
+}
+
+.customizable-secondary {
+  background-color: var(--secondary-color) !important;
+  border-color: var(--secondary-color) !important;
+}
+
+.customizable-secondary-text {
+  color: var(--secondary-color) !important;
+}
+
+.customizable-accent {
+  background-color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+}
+
+.customizable-accent-text {
+  color: var(--accent-color) !important;
+}
+
+.customizable-accent-light {
+  background-color: var(--accent-color) !important;
+  opacity: 0.2 !important;
+}
+
+.customizable-accent-border {
+  border-color: var(--accent-color) !important;
+  opacity: 0.4 !important;
+}
+
+/* Typography customization */
+.customizable-font {
+  font-family: var(--font-family) !important;
+  font-size: var(--font-size) !important;
+  font-weight: var(--font-weight) !important;
+  line-height: var(--line-height) !important;
+}
+
+.customizable-body {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Layout customization */
+.customizable-rounded {
+  border-radius: var(--border-radius) !important;
+}
+
+.customizable-spacing {
+  padding: var(--spacing) !important;
+}
+
+.customizable-spacing-lg {
+  padding: calc(var(--spacing) * 1.5) !important;
+}
+
+.customizable-gap {
+  gap: var(--spacing) !important;
+}
+
+.customizable-gap-lg {
+  gap: calc(var(--spacing) * 1.5) !important;
+}
+
+/* Animation customization */
+.customizable-transition {
+  transition-duration: var(--animation-duration) !important;
+}
+
+/* Override specific Tailwind classes when customization is active */
+body.customization-active {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+  font-family: var(--font-family) !important;
+  font-size: var(--font-size) !important;
+  font-weight: var(--font-weight) !important;
+  line-height: var(--line-height) !important;
+}
+
+/* Typography overrides for all text elements */
+body.customization-active * {
+  font-family: var(--font-family) !important;
+  line-height: var(--line-height) !important;
+}
+
+body.customization-active p,
+body.customization-active span,
+body.customization-active div,
+body.customization-active label,
+body.customization-active input,
+body.customization-active textarea,
+body.customization-active select,
+body.customization-active button {
+  font-family: var(--font-family) !important;
+  font-size: var(--font-size) !important;
+  font-weight: var(--font-weight) !important;
+  line-height: var(--line-height) !important;
+}
+
+/* Heading size adjustments */
+body.customization-active h1 {
+  font-size: calc(var(--font-size) * 2.25) !important;
+}
+
+body.customization-active h2 {
+  font-size: calc(var(--font-size) * 1.875) !important;
+}
+
+body.customization-active h3 {
+  font-size: calc(var(--font-size) * 1.5) !important;
+}
+
+body.customization-active h4 {
+  font-size: calc(var(--font-size) * 1.25) !important;
+}
+
+body.customization-active h5 {
+  font-size: calc(var(--font-size) * 1.125) !important;
+}
+
+body.customization-active h6 {
+  font-size: var(--font-size) !important;
+}
+
+/* Layout overrides for border radius */
+body.customization-active .rounded,
+body.customization-active .rounded-sm,
+body.customization-active .rounded-md,
+body.customization-active .rounded-lg,
+body.customization-active .rounded-xl,
+body.customization-active .rounded-2xl,
+body.customization-active .rounded-3xl {
+  border-radius: var(--border-radius) !important;
+}
+
+/* Layout overrides for spacing */
+body.customization-active .p-2 { padding: calc(var(--spacing) * 0.5) !important; }
+body.customization-active .p-3 { padding: calc(var(--spacing) * 0.75) !important; }
+body.customization-active .p-4 { padding: var(--spacing) !important; }
+body.customization-active .p-5 { padding: calc(var(--spacing) * 1.25) !important; }
+body.customization-active .p-6 { padding: calc(var(--spacing) * 1.5) !important; }
+body.customization-active .p-8 { padding: calc(var(--spacing) * 2) !important; }
+
+body.customization-active .m-2 { margin: calc(var(--spacing) * 0.5) !important; }
+body.customization-active .m-3 { margin: calc(var(--spacing) * 0.75) !important; }
+body.customization-active .m-4 { margin: var(--spacing) !important; }
+body.customization-active .m-5 { margin: calc(var(--spacing) * 1.25) !important; }
+body.customization-active .m-6 { margin: calc(var(--spacing) * 1.5) !important; }
+body.customization-active .m-8 { margin: calc(var(--spacing) * 2) !important; }
+
+body.customization-active .gap-2 { gap: calc(var(--spacing) * 0.5) !important; }
+body.customization-active .gap-3 { gap: calc(var(--spacing) * 0.75) !important; }
+body.customization-active .gap-4 { gap: var(--spacing) !important; }
+body.customization-active .gap-5 { gap: calc(var(--spacing) * 1.25) !important; }
+body.customization-active .gap-6 { gap: calc(var(--spacing) * 1.5) !important; }
+body.customization-active .gap-8 { gap: calc(var(--spacing) * 2) !important; }
+
+/* Component style overrides */
+body.customization-active button,
+body.customization-active .btn,
+body.customization-active [role="button"] {
+  border-radius: var(--border-radius) !important;
+  transition-duration: var(--animation-duration) !important;
+}
+
+/* Button style variations */
+body.customization-active.button-style-flat button,
+body.customization-active.button-style-flat .btn {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+body.customization-active.button-style-raised button,
+body.customization-active.button-style-raised .btn {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.customization-active.button-style-outlined button,
+body.customization-active.button-style-outlined .btn {
+  background-color: transparent !important;
+  border: 2px solid var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}
+
+body.customization-active.button-style-gradient button,
+body.customization-active.button-style-gradient .btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+  border: none !important;
+}
+
+/* Card style variations */
+body.customization-active.card-style-flat .bg-white,
+body.customization-active.card-style-flat .bg-gray-50,
+body.customization-active.card-style-flat .bg-gray-100 {
+  box-shadow: none !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+body.customization-active.card-style-elevated .bg-white,
+body.customization-active.card-style-elevated .bg-gray-50,
+body.customization-active.card-style-elevated .bg-gray-100 {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.customization-active.card-style-bordered .bg-white,
+body.customization-active.card-style-bordered .bg-gray-50,
+body.customization-active.card-style-bordered .bg-gray-100 {
+  border: 2px solid var(--primary-color) !important;
+  box-shadow: none !important;
+}
+
+body.customization-active.card-style-gradient .bg-white,
+body.customization-active.card-style-gradient .bg-gray-50,
+body.customization-active.card-style-gradient .bg-gray-100 {
+  background: linear-gradient(135deg, var(--background-color), var(--primary-color)) !important;
+  opacity: 0.95 !important;
+  border: none !important;
+}
+
+body.customization-active .bg-indigo-600,
+body.customization-active .bg-blue-600 {
+  background-color: var(--primary-color) !important;
+}
+
+body.customization-active .hover\:bg-indigo-700:hover,
+body.customization-active .hover\:bg-blue-700:hover {
+  background-color: var(--primary-color) !important;
+  opacity: 0.85 !important;
+}
+
+body.customization-active .text-indigo-600,
+body.customization-active .text-blue-600 {
+  color: var(--primary-color) !important;
+}
+
+body.customization-active .border-indigo-600,
+body.customization-active .border-blue-600 {
+  border-color: var(--primary-color) !important;
+}
+
+body.customization-active .text-green-600 {
+  color: var(--accent-color) !important;
+}
+
+body.customization-active .bg-green-100 {
+  background-color: var(--accent-color) !important;
+  opacity: 0.2 !important;
+}
+
+body.customization-active .border-green-200 {
+  border-color: var(--accent-color) !important;
+  opacity: 0.4 !important;
+}
+
+/* Accessibility enhancements */
+body.customization-active.high-contrast {
+  --primary-color: #0000FF;
+  --secondary-color: #800080;
+  --accent-color: #FF0000;
+  --text-color: #000000;
+  --background-color: #FFFFFF;
+}
+
+body.customization-active.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Font size adjustments for accessibility */
+body.customization-active.accessibility-small {
+  --font-size: 0.875rem;
+}
+
+body.customization-active.accessibility-large {
+  --font-size: 1.125rem;
+}
+
+body.customization-active.accessibility-extra-large {
+  --font-size: 1.25rem;
+}
+
+/* Typography font size overrides */
+body.customization-active.typography-small {
+  --font-size: 0.875rem;
+}
+
+body.customization-active.typography-large {
+  --font-size: 1.125rem;
+}
+
+body.customization-active.typography-extra-large {
+  --font-size: 1.25rem;
+}
+
+/* Animation speed overrides */
+body.customization-active.animation-slow {
+  --animation-duration: 0.5s;
+}
+
+body.customization-active.animation-slow *,
+body.customization-active.animation-slow *:before,
+body.customization-active.animation-slow *:after {
+  transition-duration: 0.5s !important;
+  animation-duration: 0.5s !important;
+}
+
+body.customization-active.animation-fast {
+  --animation-duration: 0.15s;
+}
+
+body.customization-active.animation-fast *,
+body.customization-active.animation-fast *:before,
+body.customization-active.animation-fast *:after {
+  transition-duration: 0.15s !important;
+  animation-duration: 0.15s !important;
+}
+
+body.customization-active.animation-none {
+  --animation-duration: 0s;
+}
+
+body.customization-active.animation-none *,
+body.customization-active.animation-none *:before,
+body.customization-active.animation-none *:after {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+  animation-iteration-count: 1 !important;
+}
+
+/* Global transition and animation overrides */
+body.customization-active *,
+body.customization-active *:before,
+body.customization-active *:after {
+  transition-duration: var(--animation-duration) !important;
+  animation-duration: var(--animation-duration) !important;
+}

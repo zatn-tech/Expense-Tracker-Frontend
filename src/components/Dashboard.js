@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useContext, useCallback, useRef, useMemo, memo } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { useParams } from 'react-router-dom';
@@ -13,6 +13,7 @@ import TransferManager from './TransferManager';
 import BalanceSettingsModal from './BalanceSettingsModal';
 
 import { TYPOGRAPHY, TYPOGRAPHY_COMBINATIONS } from '../utils/typography';
+import { announce } from '../utils/accessibility';
 
 function Dashboard() {
   const { userId } = useParams();
@@ -337,6 +338,12 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
+      {/* Screen reader announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {success && `Success: ${success}`}
+        {loading && 'Loading dashboard data...'}
+      </div>
+      
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
         {/* Header Section with Balance */}
         <div className={TYPOGRAPHY_COMBINATIONS.pageHeader.container + " mb-6 sm:mb-12"}>
@@ -360,9 +367,9 @@ function Dashboard() {
                 <button
                   onClick={() => setShowBalanceSettings(true)}
                   className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  title="Change balance display method"
+                  aria-label="Change balance display method"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -393,7 +400,7 @@ function Dashboard() {
                 +2.5%
               </span>
             </div>
-            <h3 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-500 dark:text-gray-400 mb-3"}>Income This Month</h3>
+            <h2 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-600 dark:text-gray-300 mb-3"}>Income This Month</h2>
             <p className={`${TYPOGRAPHY.AMOUNT} text-gray-900 dark:text-white mb-3`}>
               ₹{stats.totalIncome.toLocaleString('en-IN')}
             </p>
@@ -420,7 +427,7 @@ function Dashboard() {
                 +1.2%
               </span>
             </div>
-            <h3 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-500 dark:text-gray-400 mb-3"}>Expenses This Month</h3>
+            <h2 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-600 dark:text-gray-300 mb-3"}>Expenses This Month</h2>
             <p className={`${TYPOGRAPHY.AMOUNT} text-gray-900 dark:text-white mb-3`}>
               ₹{stats.totalExpenses.toLocaleString('en-IN')}
             </p>
@@ -447,7 +454,7 @@ function Dashboard() {
                 This Month
               </span>
             </div>
-            <h3 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-500 dark:text-gray-400 mb-3"}>Monthly Overview</h3>
+            <h2 className={TYPOGRAPHY.BODY_SM + " font-medium text-gray-600 dark:text-gray-300 mb-3"}>Monthly Overview</h2>
             <p className={`${TYPOGRAPHY.AMOUNT} text-gray-900 dark:text-white mb-3`}>
               {monthlyStats.transactions}
             </p>
@@ -471,6 +478,8 @@ function Dashboard() {
                 <button
                   onClick={() => setShowTransferForm(!showTransferForm)}
                   className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-all duration-200"
+                  aria-expanded={showTransferForm}
+                  aria-controls="transfer-form"
                 >
                   {showTransferForm ? 'Hide' : 'Show'} Transfer Form
                 </button>
@@ -485,17 +494,19 @@ function Dashboard() {
             </div>
             
             {showTransferForm ? (
-              <TransferManager 
-                onTransferComplete={handleTransferComplete}
-                accounts={accounts} // Pass existing accounts data
-                className="mt-4"
-              />
+              <div id="transfer-form">
+                <TransferManager 
+                  onTransferComplete={handleTransferComplete}
+                  accounts={accounts} // Pass existing accounts data
+                  className="mt-4"
+                />
+              </div>
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🏦</div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   Quick Transfer
-                </h3>
+                </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Move money between your accounts quickly and securely
                 </p>
@@ -613,9 +624,9 @@ function Dashboard() {
 
             {/* This Month Summary */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
-              <h3 className={TYPOGRAPHY_COMBINATIONS.cardHeader.title + " mb-6"}>
+              <h2 className={TYPOGRAPHY_COMBINATIONS.cardHeader.title + " mb-6"}>
                 This Month Summary
-              </h3>
+              </h2>
               <div className="space-y-5">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
                   <span className={TYPOGRAPHY.BODY_SM + " text-gray-600 dark:text-gray-400"}>Transactions</span>
@@ -642,7 +653,7 @@ function Dashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className={TYPOGRAPHY_COMBINATIONS.cardHeader.title}>Recent Activity</h3>
+                <h2 className={TYPOGRAPHY_COMBINATIONS.cardHeader.title}>Recent Activity</h2>
               </div>
               <div className="space-y-4">
                 {transactions.length > 0 ? (
@@ -817,4 +828,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default memo(Dashboard);

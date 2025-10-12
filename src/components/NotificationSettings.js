@@ -246,16 +246,13 @@ const NotificationSettings = () => {
             <button
               onClick={async () => {
                 try {
-                  console.log('Manual subscription button clicked');
                   const subscription = await subscribeToPush();
-                  console.log('Subscription created:', subscription);
                   
                   if (subscription) {
                     await sendSubscriptionToBackend(subscription);
                     showSuccess('Browser notifications enabled successfully!');
                   }
                 } catch (error) {
-                  console.error('Subscription error:', error);
                   showError('Failed to enable browser notifications: ' + error.message);
                 }
               }}

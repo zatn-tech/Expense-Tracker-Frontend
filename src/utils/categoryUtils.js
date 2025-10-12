@@ -35,7 +35,6 @@ export const fetchCategories = async (userId, token, forceRefresh = false) => {
 
     return response.data;
   } catch (error) {
-    console.error('Error fetching categories:', error);
     throw error;
   }
 };
@@ -54,7 +53,6 @@ export const useDynamicCategories = (userId, token) => {
         [type]: categoriesForType
       }));
     } catch (error) {
-      console.error(`Error loading ${type} categories:`, error);
     } finally {
       setLoading(false);
     }
@@ -73,7 +71,6 @@ export const useDynamicCategories = (userId, token) => {
         income: incomeCategories
       });
     } catch (error) {
-      console.error('Error loading all categories:', error);
     } finally {
       setLoading(false);
     }
@@ -94,7 +91,6 @@ export const fetchCategoriesByType = async (userId, token, type) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching categories by type:', error);
     throw error;
   }
 };

@@ -47,7 +47,6 @@ const TransferHistory = ({ onTransferUpdate, className = '' }) => {
         }));
       }
     } catch (error) {
-      console.error('Error fetching transfers:', error);
     } finally {
       setLoading(false);
     }
@@ -87,7 +86,6 @@ const TransferHistory = ({ onTransferUpdate, className = '' }) => {
         }
       }
     } catch (error) {
-      console.error('Error updating transfer:', error);
     }
   };
 
@@ -114,16 +112,11 @@ const TransferHistory = ({ onTransferUpdate, className = '' }) => {
         }
       }
     } catch (error) {
-      console.error('Error reverting transfer:', error);
       
       // Show more detailed error information
       if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
       } else if (error.request) {
-        console.error('Error request:', error.request);
       } else {
-        console.error('Error message:', error.message);
       }
       
       // Reset state on error

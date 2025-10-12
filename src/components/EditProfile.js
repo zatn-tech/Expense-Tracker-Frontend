@@ -12,7 +12,6 @@ const formatDateForInput = (dateString) => {
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
   } catch (error) {
-    console.error('Error formatting date for input:', error);
     return '';
   }
 };
@@ -51,7 +50,6 @@ function EditProfile({ onCancel }) {
         dateOfBirth: formatDateForInput(profile.dateOfBirth)
       });
     } catch (err) {
-      console.error('Error fetching profile:', err);
     } finally {
       setLoading(false);
     }
@@ -75,18 +73,15 @@ function EditProfile({ onCancel }) {
       dateOfBirth: formData.dateOfBirth || null
     };
 
-    console.log('Sending profile data:', dataToSend);
     
     try {
       const response = await axios.put(API_ENDPOINTS.USER_PROFILE(formData.id), dataToSend, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('Profile update response:', response.data);
       alert('Profile updated successfully!');
       onCancel(); // Go back to view mode
     } catch (err) {
-      console.error('Profile update error:', err);
       alert('Error updating profile: ' + (err.response?.data?.error || err.message));
     } finally {
       setSaving(false);

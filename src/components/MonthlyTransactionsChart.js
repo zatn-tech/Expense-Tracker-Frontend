@@ -70,7 +70,6 @@ export default function MonthlyTransactionsChart() {
 
       })
       .catch((err) => {
-        console.error('Error fetching daily data', err);
         setData({ labels: [], datasets: [] });
       })
       .finally(() => {

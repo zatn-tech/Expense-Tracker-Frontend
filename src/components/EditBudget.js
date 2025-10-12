@@ -59,7 +59,6 @@ function EditBudget({ budget, onClose, onBudgetUpdated }) {
       const uniqueCategories = [...new Set(transactions.map(t => t.category).filter(Boolean))];
       setCategories(uniqueCategories.sort());
     } catch (err) {
-      console.error('Error fetching categories:', err);
     }
   };
 
@@ -110,7 +109,6 @@ function EditBudget({ budget, onClose, onBudgetUpdated }) {
 
       onBudgetUpdated();
     } catch (err) {
-      console.error('Error updating budget:', err);
       setError(err.response?.data?.error || 'Failed to update budget');
     } finally {
       setLoading(false);

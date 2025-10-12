@@ -78,7 +78,6 @@ function TransactionManager({ onClose, onTransactionsUpdated }) {
 
       setTransactions(fetchedTransactions);
     } catch (err) {
-      console.error('Error fetching transactions:', err);
       setError(err.response?.data?.error || 'Failed to load transactions');
     } finally {
       setLoading(false);
@@ -102,7 +101,6 @@ function TransactionManager({ onClose, onTransactionsUpdated }) {
         income: incomeResponse.data
       });
     } catch (error) {
-      console.error('Error fetching categories:', error);
     } finally {
       setCategoriesLoading(false);
     }
@@ -326,7 +324,6 @@ function TransactionManager({ onClose, onTransactionsUpdated }) {
           
           showSuccess(`Successfully deleted ${selectedTransactions.size} transaction(s)`);
         } catch (err) {
-          console.error('Error deleting selected transactions:', err);
           showError(err.response?.data?.error || 'Failed to delete selected transactions');
         } finally {
           setBulkDeleting(false);
@@ -387,7 +384,6 @@ function TransactionManager({ onClose, onTransactionsUpdated }) {
           
           showSuccess(`Successfully deleted ${filteredTransactions.length} transaction(s)`);
         } catch (err) {
-          console.error('Error deleting all filtered transactions:', err);
           showError(err.response?.data?.error || 'Failed to delete all transactions');
         } finally {
           setDeletingAll(false);

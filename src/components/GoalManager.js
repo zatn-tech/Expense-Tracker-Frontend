@@ -75,7 +75,6 @@ const GoalManager = () => {
 
       setCategories(mappedCategories);
     } catch (error) {
-      console.error('Error fetching categories:', error);
     } finally {
       setCategoriesLoading(false);
     }
@@ -122,7 +121,6 @@ const GoalManager = () => {
         [goalType]: filteredCategories
       }));
     } catch (error) {
-      console.error('Error fetching categories for goal type:', error);
     } finally {
       setCategoriesLoading(false);
     }
@@ -140,7 +138,6 @@ const GoalManager = () => {
       });
       setGoals(response.data);
     } catch (error) {
-      console.error('Error fetching goals:', error);
       setError('Failed to fetch goals');
     } finally {
       setLoading(false);
@@ -170,7 +167,6 @@ const GoalManager = () => {
             headers: { Authorization: `Bearer ${token}` }
           });
         } catch (calcError) {
-          console.error('Error calculating initial progress:', calcError);
           // Don't show error to user as goal was created successfully
         }
       }
@@ -181,7 +177,6 @@ const GoalManager = () => {
       
       showSuccess('Goal created successfully! Progress has been calculated from your existing transactions.');
     } catch (error) {
-      console.error('Error saving goal:', error);
       showError(error.response?.data?.message || 'Failed to save goal');
     } finally {
       setCreatingGoal(false);
@@ -203,7 +198,6 @@ const GoalManager = () => {
           fetchGoals();
           showSuccess('Goal deleted successfully!');
         } catch (error) {
-          console.error('Error deleting goal:', error);
           showError('Failed to delete goal');
         }
       }
@@ -218,7 +212,6 @@ const GoalManager = () => {
       fetchGoals();
       showSuccess('Progress calculated successfully!');
     } catch (error) {
-      console.error('Error calculating progress:', error);
       showError('Failed to calculate progress');
     }
   };

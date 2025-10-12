@@ -50,7 +50,6 @@ function BudgetManager({ onClose, onBudgetUpdated }) {
       setBudgetStats(statsResponse.data);
       setAlerts(alertsResponse.data);
     } catch (err) {
-      console.error('Error fetching budget data:', err);
       setError(err.response?.data?.error || 'Failed to load budget data');
     } finally {
       setLoading(false);
@@ -93,7 +92,6 @@ function BudgetManager({ onClose, onBudgetUpdated }) {
           
           showSuccess('Budget deleted successfully!');
         } catch (err) {
-          console.error('Error deleting budget:', err);
           showError(err.response?.data?.error || 'Failed to delete budget');
         }
       }

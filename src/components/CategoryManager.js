@@ -65,7 +65,6 @@ const CategoryManager = ({ onCategoriesSet, isSetupMode = false }) => {
       });
       setCategories(response.data);
     } catch (error) {
-      console.error('Error fetching categories:', error);
       setError('Failed to fetch categories');
     } finally {
       setLoading(false);
@@ -95,7 +94,6 @@ const CategoryManager = ({ onCategoriesSet, isSetupMode = false }) => {
       // In setup mode, don't auto-advance - let user add more categories
       // The continue button will call onCategoriesSet when ready
     } catch (error) {
-      console.error('Error saving category:', error);
       setError(error.response?.data?.message || 'Failed to save category');
     }
   };
@@ -133,7 +131,6 @@ const CategoryManager = ({ onCategoriesSet, isSetupMode = false }) => {
         fetchCategories();
         setError(null);
       } catch (error) {
-        console.error('Error deleting category:', error);
         setError('Failed to delete category');
       }
     }

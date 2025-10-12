@@ -4,7 +4,6 @@
 // PRODUCTION API - Always use the production URL for ALL devices
 const getApiBaseUrl = () => {
   const productionUrl = 'https://expenseapi.zatn.in';
-  
   return productionUrl;
 };
 
@@ -35,7 +34,7 @@ export const API_ENDPOINTS = {
   USER_CATEGORIES: (userId) => `${API_BASE_URL}/api/user/${userId}/categories`,
   USER_RECURRING_TRANSACTIONS: (userId) => `${API_BASE_URL}/api/user/${userId}/recurring-transactions`,
   USER_CHANGE_PASSWORD: (userId) => `${API_BASE_URL}/api/user/${userId}/change-password`,
-  USER_UPLOAD_PICTURE: (userId) => `${API_BASE_URL}/api/user/${userId}/upload-picture`,
+USER_UPLOAD_PICTURE: (userId) => `${API_BASE_URL}/api/user/${userId}/upload-picture`,
   USERS: (userId) => `${API_BASE_URL}/api/user/${userId}`,
   USER_DELETE_ACCOUNT: (userId) => `${API_BASE_URL}/api/user/${userId}`,
   USER_BALANCE_PREFERENCES: (userId) => `${API_BASE_URL}/api/user/${userId}/balance-preferences`,
@@ -111,12 +110,31 @@ export const API_ENDPOINTS = {
   USER_EMAIL_TRANSACTION_REJECT: (userId, transactionId) => `${API_BASE_URL}/api/user/${userId}/email-transactions/${transactionId}/reject`,
   USER_EMAIL_TRANSACTION_MODIFY: (userId, transactionId) => `${API_BASE_URL}/api/user/${userId}/email-transactions/${transactionId}/modify`,
   USER_EMAIL_TRANSACTIONS_PROCESS_PENDING: (userId) => `${API_BASE_URL}/api/user/${userId}/email-transactions/process-pending`,
+  USER_EMAIL_TRANSACTIONS_BULK_DELETE: (userId) => `${API_BASE_URL}/api/user/${userId}/email-transactions/bulk-delete`,
   USER_EMAIL_SCANNING_STATS: (userId) => `${API_BASE_URL}/api/user/${userId}/email-scanning/stats`,
 
   NOTIFICATIONS_TEST_LOW_BALANCE_ALERT: `${API_BASE_URL}/api/notifications/test/low-balance-alert`,
   
   // Setup endpoints
   SETUP: `${API_BASE_URL}/api/setup`,
+  
+  // Updates endpoints
+  USER_UPDATES: (userId) => `${API_BASE_URL}/api/user/${userId}/updates`,
+  USER_UPDATES_UNREAD_COUNT: (userId) => `${API_BASE_URL}/api/user/${userId}/updates/unread-count`,
+  USER_UPDATES_STATS: (userId) => `${API_BASE_URL}/api/user/${userId}/updates/stats`,
+  USER_UPDATE_MARK_AS_READ: (userId, updateId) => `${API_BASE_URL}/api/user/${userId}/updates/${updateId}/read`,
+  USER_UPDATES_MARK_ALL_READ: (userId) => `${API_BASE_URL}/api/user/${userId}/updates/mark-all-read`,
+  
+  // User Preferences endpoints
+  USER_PREFERENCES: (userId) => `${API_BASE_URL}/api/user/${userId}/preferences`,
+  USER_PREFERENCES_SECTION: (userId, section) => `${API_BASE_URL}/api/user/${userId}/preferences/${section}`,
+  USER_PREFERENCES_RESET: (userId) => `${API_BASE_URL}/api/user/${userId}/preferences/reset`,
+  USER_PREFERENCES_EXPORT: (userId) => `${API_BASE_URL}/api/user/${userId}/preferences/export`,
+  USER_PREFERENCES_IMPORT: (userId) => `${API_BASE_URL}/api/user/${userId}/preferences/import`,
+  
+  // Admin endpoints
+  ADMIN_UPDATES: `${API_BASE_URL}/api/admin/updates`,
+  ADMIN_UPDATES_STATS: `${API_BASE_URL}/api/admin/updates/stats`,
   
   // Upload endpoints
   UPLOAD_BASE: `${API_BASE_URL}/uploads`,

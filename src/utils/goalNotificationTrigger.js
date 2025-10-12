@@ -1,24 +1,18 @@
 // Goal notification trigger for browser notifications
 export const triggerGoalBrowserNotification = (notification) => {
-  console.log('🔔 triggerGoalBrowserNotification called with:', notification);
   
   try {
     // Check if browser notifications are supported
     if (!('Notification' in window)) {
-      console.log('❌ Browser notifications are not supported');
       return false;
     }
     
-    console.log('✅ Browser supports notifications');
-    console.log('📋 Current notification permission:', Notification.permission);
     
     // Check if permission is granted
     if (Notification.permission !== 'granted') {
-      console.log('❌ Notification permission not granted. Current permission:', Notification.permission);
       return false;
     }
     
-    console.log('✅ Notification permission granted');
     
     // Create and show the notification
     const browserNotification = new Notification(notification.title, {
@@ -35,7 +29,6 @@ export const triggerGoalBrowserNotification = (notification) => {
       }
     });
     
-    console.log('✅ Browser notification created:', browserNotification);
     
     // Handle notification click
     browserNotification.onclick = () => {
@@ -49,14 +42,11 @@ export const triggerGoalBrowserNotification = (notification) => {
     // Auto-close after 5 seconds
     setTimeout(() => {
       browserNotification.close();
-      console.log('✅ Goal notification auto-closed');
     }, 5000);
     
-    console.log('✅ Goal browser notification triggered successfully');
     return true;
     
   } catch (error) {
-    console.error('❌ Error sending goal browser notification:', error);
     return false;
   }
 }; 

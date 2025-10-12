@@ -58,7 +58,6 @@ function ProfileView({ onEdit }) {
             });
             setProfile(res.data);
         } catch (err) {
-            console.error('Error fetching profile:', err);
         } finally {
             setLoading(false);
         }

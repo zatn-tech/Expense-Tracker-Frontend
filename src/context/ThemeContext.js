@@ -16,11 +16,14 @@ export const ThemeProvider = ({ children }) => {
   // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
     
     if (theme === 'dark') {
       root.classList.add('dark');
+      body.classList.add('dark');
     } else {
       root.classList.remove('dark');
+      body.classList.remove('dark');
     }
     
     // Also update meta theme-color for mobile browsers

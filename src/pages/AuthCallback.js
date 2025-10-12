@@ -15,39 +15,30 @@ const AuthCallback = () => {
             return;
       }
 
-      console.log('🔄 AuthCallback: Starting callback handling');
       hasProcessed.current = true;
       
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
       const user = urlParams.get('user');
 
-      console.log('🔍 AuthCallback: URL params - token:', token ? 'present' : 'missing', 'user:', user ? 'present' : 'missing');
 
       if (token && user) {
         try {
           const userData = JSON.parse(decodeURIComponent(user));
-          console.log('👤 AuthCallback: Parsed user data:', userData);
           
           // Update auth context with social login
-          console.log('🔐 AuthCallback: Calling socialLogin...');
           await socialLogin(token, userData, false);
-          console.log('✅ AuthCallback: socialLogin completed successfully');
           
           // Clear URL parameters
           window.history.replaceState({}, document.title, `/user/${userData.id}/dashboard`);
-          console.log('🧹 AuthCallback: URL parameters cleared');
           
           // Redirect to dashboard
-          console.log('🚀 AuthCallback: Navigating to dashboard...');
           navigate(`/user/${userData.id}/dashboard`);
         } catch (error) {
-          console.error('❌ AuthCallback: Error during callback handling:', error);
           setError('Failed to authenticate with social provider');
           hasProcessed.current = false;
         }
       } else {
-        console.error('❌ AuthCallback: Missing token or user data');
         setError('Authentication failed. Please try again.');
         hasProcessed.current = false;
       }

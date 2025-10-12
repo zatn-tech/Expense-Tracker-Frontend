@@ -198,7 +198,6 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
           await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
           continue;
         } else {
-          console.log(`Transfer failed after ${retryCount + 1} attempts`);
         }
         
         setSafeErrors({ general: errorMessage });
@@ -292,7 +291,6 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
               onChange={handleInputChange}
               className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               required
-              onFocus={() => console.log('From account select focused')}
             >
               <option value="">Select source account</option>
               {accounts.map(account => (
@@ -319,7 +317,6 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
               onChange={handleInputChange}
               className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               required
-              onFocus={() => console.log('To account select focused')}
             >
               <option value="">Select destination account</option>
               {accounts
@@ -353,8 +350,6 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
                 min="0.01"
                 className="w-full pl-8 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 required
-                onFocus={() => console.log('Amount input focused')}
-                onBlur={() => console.log('Amount input blurred, value:', formData.amount)}
               />
             </div>
             {errors.amount && typeof errors.amount === 'string' && (
@@ -413,7 +408,6 @@ const TransferManager = ({ onTransferComplete, accounts: dashboardAccounts, clas
             type="submit"
             disabled={loading || validating}
             className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => console.log('Submit button clicked, loading:', loading, 'validating:', validating)}
           >
             {loading ? (
               <>

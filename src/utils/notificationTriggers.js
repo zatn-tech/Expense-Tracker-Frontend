@@ -22,23 +22,17 @@ const getNotificationPreferences = () => {
 
 // Generic browser notification function
 const sendBrowserNotification = (title, body, options = {}) => {
-  console.log('🔔 sendBrowserNotification called:', { title, body, options });
   
   try {
     if (!('Notification' in window)) {
-      console.log('❌ Browser notifications are not supported');
       return false;
     }
 
-    console.log('✅ Browser supports notifications');
-    console.log('📋 Current notification permission:', Notification.permission);
 
     if (Notification.permission !== 'granted') {
-      console.log('❌ Notification permission not granted. Current permission:', Notification.permission);
       return false;
     }
 
-    console.log('✅ Notification permission granted');
 
     const notification = new Notification(title, {
       body,
@@ -50,36 +44,29 @@ const sendBrowserNotification = (title, body, options = {}) => {
       ...options
     });
 
-    console.log('✅ Browser notification created:', notification);
 
     // Auto-close after 10 seconds
     setTimeout(() => {
       notification.close();
-      console.log('✅ Notification auto-closed');
     }, 10000);
 
     // Handle click to navigate
     notification.onclick = () => {
       window.focus();
       notification.close();
-      console.log('✅ Notification clicked, window focused');
     };
 
-    console.log('✅ Browser notification triggered successfully');
     return true;
   } catch (error) {
-    console.error('❌ Error sending browser notification:', error);
     return false;
   }
 };
 
 // Budget Alert Notifications
 export const triggerBudgetBrowserNotification = (alert) => {
-  console.log('🔔 triggerBudgetBrowserNotification called with alert:', alert);
   
   const preferences = getNotificationPreferences();
   if (!preferences.budgetAlerts) {
-    console.log('❌ Budget alerts disabled in preferences');
     return false;
   }
 
@@ -97,18 +84,15 @@ export const triggerBudgetBrowserNotification = (alert) => {
       }
     });
   } catch (error) {
-    console.error('Error triggering budget browser notification:', error);
     return false;
   }
 };
 
 // Recurring Transaction Reminders
 export const triggerRecurringReminder = async (recurringTransaction) => {
-  console.log('🔔 triggerRecurringReminder called:', recurringTransaction);
   
   const preferences = getNotificationPreferences();
   if (!preferences.recurringReminders) {
-    console.log('❌ Recurring reminders disabled in preferences');
     return false;
   }
 
@@ -126,11 +110,9 @@ export const triggerRecurringReminder = async (recurringTransaction) => {
 
 // Weekly Report Notifications
 export const triggerWeeklyReport = async (reportData) => {
-  console.log('🔔 triggerWeeklyReport called:', reportData);
   
   const preferences = getNotificationPreferences();
   if (!preferences.weeklyReports) {
-    console.log('❌ Weekly reports disabled in preferences');
     return false;
   }
 
@@ -148,11 +130,9 @@ export const triggerWeeklyReport = async (reportData) => {
 
 // Monthly Report Notifications
 export const triggerMonthlyReport = async (reportData) => {
-  console.log('🔔 triggerMonthlyReport called:', reportData);
   
   const preferences = getNotificationPreferences();
   if (!preferences.monthlyReports) {
-    console.log('❌ Monthly reports disabled in preferences');
     return false;
   }
 
@@ -170,11 +150,9 @@ export const triggerMonthlyReport = async (reportData) => {
 
 // Goal Update Notifications
 export const triggerGoalUpdate = async (goalData) => {
-  console.log('🔔 triggerGoalUpdate called:', goalData);
   
   const preferences = getNotificationPreferences();
   if (!preferences.goalUpdates) {
-    console.log('❌ Goal updates disabled in preferences');
     return false;
   }
 
@@ -192,11 +170,9 @@ export const triggerGoalUpdate = async (goalData) => {
 
 // Low Balance Alert Notifications
 export const triggerLowBalanceAlert = async (balanceData) => {
-  console.log('🔔 triggerLowBalanceAlert called:', balanceData);
   
   const preferences = getNotificationPreferences();
   if (!preferences.lowBalanceAlerts) {
-    console.log('❌ Low balance alerts disabled in preferences');
     return false;
   }
 

@@ -70,7 +70,6 @@ Click OK to proceed to final confirmation.`
         throw new Error(data.message || 'Failed to delete account');
       }
     } catch (err) {
-      console.error('Error deleting account:', err);
       setError(err.message || 'Failed to delete account. Please try again.');
     } finally {
       setIsDeleting(false);

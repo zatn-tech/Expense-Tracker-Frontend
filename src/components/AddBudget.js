@@ -41,7 +41,6 @@ function AddBudget({ onClose, onBudgetCreated }) {
       
       setCategories(expenseCategories.sort());
     } catch (err) {
-      console.error('Error fetching categories:', err);
     }
   };
 
@@ -134,7 +133,6 @@ function AddBudget({ onClose, onBudgetCreated }) {
 
       onBudgetCreated();
     } catch (err) {
-      console.error('Error creating budget:', err);
       setError(err.response?.data?.error || 'Failed to create budget');
     } finally {
       setLoading(false);

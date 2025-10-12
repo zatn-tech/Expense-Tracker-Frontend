@@ -49,7 +49,6 @@ function ExportData({ onClose }) {
   ];
 
   const handleExport = async (type) => {
-    console.log('Exporting:', type); // Debug log
     setExporting({ ...exporting, [type]: true });
     
     try {
@@ -76,7 +75,6 @@ function ExportData({ onClose }) {
           throw new Error('Invalid export type');
       }
 
-      console.log('Making request to:', endpoint); // Debug log
 
       const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
@@ -84,7 +82,6 @@ function ExportData({ onClose }) {
         responseType
       });
 
-      console.log('Response received:', response); // Debug log
 
       if (responseType === 'json') {
         // For JSON, create blob from the response
@@ -115,7 +112,6 @@ function ExportData({ onClose }) {
       alert('Your data has been exported successfully!');
 
     } catch (err) {
-      console.error(`${type} export error:`, err);
       alert(`Error exporting data: ${err.response?.data?.error || err.message}`);
     } finally {
       setExporting({ ...exporting, [type]: false });

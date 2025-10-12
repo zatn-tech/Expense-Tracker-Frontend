@@ -18,7 +18,6 @@ function ProfilePicture({ currentImage, onUpdate }) {
   // Security check
   React.useEffect(() => {
     if (user && userId !== user._id) {
-      console.warn('Access denied: Cannot modify another user\'s profile picture');
       return;
     }
   }, [userId, user]);
@@ -77,7 +76,6 @@ function ProfilePicture({ currentImage, onUpdate }) {
       }, 3000);
       
     } catch (err) {
-      console.error('Upload error:', err);
       let errorMessage = 'Error uploading image';
       
       if (err.response?.status === 403) {
@@ -114,7 +112,6 @@ function ProfilePicture({ currentImage, onUpdate }) {
           onUpdate('');
           showSuccess('Profile picture removed successfully!');
         } catch (err) {
-          console.error('Remove image error:', err);
           showError('Error removing profile picture: ' + (err.response?.data?.error || err.message));
         } finally {
           setUploading(false);
@@ -165,7 +162,6 @@ function ProfilePicture({ currentImage, onUpdate }) {
               alt="Profile"
               className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
               onError={(e) => {
-                console.error('Error loading profile image:', e);
                 e.target.style.display = 'none';
               }}
             />

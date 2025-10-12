@@ -58,7 +58,6 @@ function PieChartSlide({ userId, period, isActive }) {
         setHasLoaded(true);
       }
     } catch (error) {
-      console.error('Error fetching category expenses:', error);
       setData({ labels: [], datasets: [] });
     } finally {
       setLoading(false);

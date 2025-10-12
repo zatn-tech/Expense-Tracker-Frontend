@@ -19,7 +19,6 @@ export const MOBILE_CONFIG = {
       
       // FIRST: Check if REACT_APP_API_URL environment variable is set
       if (process.env.REACT_APP_API_URL) {
-        console.log('🔗 Using API URL from environment:', process.env.REACT_APP_API_URL);
         return process.env.REACT_APP_API_URL;
       }
       
@@ -42,7 +41,6 @@ export const MOBILE_CONFIG = {
       // If accessing from localhost, use localhost
       return `http://localhost:${MOBILE_CONFIG.BACKEND_PORT}`;
     } catch (error) {
-      console.warn('⚠️ Error getting backend URL, using fallback:', error);
       return 'https://expenseapi.zatn.in';
     }
   },
@@ -65,7 +63,6 @@ export const MOBILE_CONFIG = {
       // If accessing from localhost, use localhost
       return `http://localhost:${MOBILE_CONFIG.FRONTEND_PORT}`;
     } catch (error) {
-      console.warn('⚠️ Error getting frontend URL, using fallback:', error);
       return `http://localhost:${MOBILE_CONFIG.FRONTEND_PORT}`;
     }
   },
@@ -81,7 +78,6 @@ export const MOBILE_CONFIG = {
       const hostname = window.location.hostname;
       return hostname !== 'localhost' && hostname !== '127.0.0.1';
     } catch (error) {
-      console.warn('⚠️ Error checking mobile access, assuming false:', error);
       return false;
     }
   },
@@ -90,15 +86,8 @@ export const MOBILE_CONFIG = {
   debug: () => {
     try {
       if (typeof window !== 'undefined' && window.console) {
-        console.log('🔧 Mobile Configuration Debug:');
-        console.log('📍 Current Hostname:', window.location?.hostname || 'N/A');
-        console.log('📱 Is Mobile Access:', MOBILE_CONFIG.isMobileAccess());
-        console.log('🌐 Backend URL:', MOBILE_CONFIG.getBackendUrl());
-        console.log('🖥️ Frontend URL:', MOBILE_CONFIG.getFrontendUrl());
-        console.log('💻 Computer IP:', MOBILE_CONFIG.COMPUTER_IP);
       }
     } catch (error) {
-      console.warn('⚠️ Error in debug function:', error);
     }
   }
 };

@@ -95,7 +95,6 @@ function ImportTransactions({ onClose, onImportSuccess }) {
 
       setPreviewData(response.data);
     } catch (err) {
-      console.error('Preview error:', err);
       setError(err.response?.data?.error || 'Failed to preview transactions');
     } finally {
       setPreviewing(false);
@@ -150,7 +149,6 @@ function ImportTransactions({ onClose, onImportSuccess }) {
         onImportSuccess();
       }
     } catch (err) {
-      console.error('Import error:', err);
       setError(err.response?.data?.error || 'Failed to import transactions');
     } finally {
       setImporting(false);
@@ -191,7 +189,6 @@ function ImportTransactions({ onClose, onImportSuccess }) {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Failed to download template:', error);
       // Fallback to client-side template
       const option = importOptions.find(opt => opt.id === fileType);
       const blob = new Blob([option.example], { type: 'text/plain' });

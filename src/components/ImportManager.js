@@ -40,7 +40,6 @@ function ImportManager({ onClose, onImportDeleted }) {
       } else if (response.data && Array.isArray(response.data.transactions)) {
         transactions = response.data.transactions;
       } else {
-        console.warn('Unexpected response format:', response.data);
         transactions = [];
       }
 
@@ -78,7 +77,6 @@ function ImportManager({ onClose, onImportDeleted }) {
 
       setImportHistory(history);
     } catch (err) {
-      console.error('Error fetching import history:', err);
       setError(err.response?.data?.error || 'Failed to load import history');
     } finally {
       setLoading(false);
@@ -113,7 +111,6 @@ function ImportManager({ onClose, onImportDeleted }) {
           
           showSuccess('Import batch deleted successfully!');
         } catch (err) {
-          console.error('Error deleting import batch:', err);
           showError('Failed to delete import batch');
         } finally {
           setDeleting(null);

@@ -53,7 +53,6 @@ function PreferencesSettings() {
         }
       }
     } catch (err) {
-      console.error('Error fetching preferences:', err);
       if (err.response?.status === 403) {
         alert('Access denied: You can only access your own data');
       }
@@ -99,7 +98,6 @@ function PreferencesSettings() {
         setPreferences(res.data.preferences);
       }
     } catch (err) {
-      console.error('Error updating preferences:', err);
       alert('Error updating preferences: ' + (err.response?.data?.error || err.message));
     } finally {
       setSaving(false);

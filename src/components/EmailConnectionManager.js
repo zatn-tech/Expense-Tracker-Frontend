@@ -393,9 +393,6 @@ const EmailConnectionManager = () => {
   const handleSaveModification = async (e) => {
     e.preventDefault(); // Prevent form submission and page reload
     
-    console.log('Form submitted, preventing default behavior');
-    console.log('Modifying transaction:', modifyingTransaction);
-    console.log('Form data:', modifyFormData);
     
     if (!token || !userId || !user || userId !== user._id || !modifyingTransaction) return;
     
@@ -442,7 +439,6 @@ const EmailConnectionManager = () => {
         }
       } else {
         // Handle modification
-        console.log('Modifying transaction:', modifyingTransaction._id, 'with data:', modifyFormData);
         
         const response = await fetch(API_ENDPOINTS.USER_EMAIL_TRANSACTION_MODIFY(userId, modifyingTransaction._id), {
           method: 'PUT',
@@ -454,7 +450,6 @@ const EmailConnectionManager = () => {
         });
         
         const data = await response.json();
-        console.log('Modify response:', data);
         
         if (data.status === 'success') {
           setShowModifyForm(false);
@@ -462,12 +457,10 @@ const EmailConnectionManager = () => {
           fetchEmailTransactions();
           showSuccess('Transaction modified successfully!');
         } else {
-          console.error('Modification failed:', data);
           showError(`Modification failed: ${data.message || 'Unknown error'}`);
         }
       }
     } catch (error) {
-      console.error('Error processing transaction:', error);
       showError(`Error processing transaction: ${error.message}`);
     } finally {
       setLoading(false);

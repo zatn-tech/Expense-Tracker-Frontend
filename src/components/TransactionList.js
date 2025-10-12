@@ -67,7 +67,6 @@ function TransactionList({ transactions, onDelete, onUpdate, userId }) {
             });
           }
         } catch (err) {
-          console.error('Delete error:', err);
           showError('Failed to delete transaction: ' + (err.response?.data?.error || err.message));
         }
       }
@@ -115,7 +114,6 @@ function TransactionList({ transactions, onDelete, onUpdate, userId }) {
         });
       }
     } catch (error) {
-      console.error('Error formatting date:', error);
       return 'Invalid date';
     }
   };

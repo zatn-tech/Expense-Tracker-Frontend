@@ -34,7 +34,6 @@ function Reports({ onClose }) {
       
       setReportData(res.data);
     } catch (err) {
-      console.error('Error fetching report data:', err);
       alert('Error loading report data: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
@@ -73,7 +72,6 @@ function Reports({ onClose }) {
       setTimeout(() => document.body.removeChild(successMsg), 3000);
 
     } catch (err) {
-      console.error('PDF export error:', err);
       alert('Error exporting to PDF: ' + (err.response?.data?.error || err.message));
     } finally {
       setExporting({ ...exporting, pdf: false });
@@ -112,7 +110,6 @@ function Reports({ onClose }) {
       setTimeout(() => document.body.removeChild(successMsg), 3000);
 
     } catch (err) {
-      console.error('Excel export error:', err);
       alert('Error exporting to Excel: ' + (err.response?.data?.error || err.message));
     } finally {
       setExporting({ ...exporting, excel: false });

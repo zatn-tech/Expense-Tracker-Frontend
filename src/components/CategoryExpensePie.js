@@ -20,23 +20,15 @@ export default function CategoryExpensePie() {
   const [error, setError] = useState(null);
   const [debugInfo, setDebugInfo] = useState({});
 
-  console.log('🔍 CategoryExpensePie component rendered');
-  console.log('🔍 Current state:', { loading, error, data, user: user?._id });
 
   useEffect(() => {
-    console.log('🔍 useEffect triggered');
-    console.log('🔍 User object:', user);
-    console.log('🔍 User ID:', user?._id);
     
     if (!user?._id) {
-      console.log('🚫 No user ID available for pie chart');
       setLoading(false);
       return;
     }
 
-    console.log('🔄 Loading pie chart data for user:', user._id);
     const apiUrl = API_ENDPOINTS.USER_TRANSACTIONS_CATEGORY_EXPENSES(user._id);
-    console.log('🌐 API endpoint:', apiUrl);
     
     setLoading(true);
     setError(null);
@@ -45,8 +37,6 @@ export default function CategoryExpensePie() {
     axios
       .get(apiUrl)
       .then(res => {
-        console.log('✅ Pie chart API response:', res.data);
-        console.log('📊 Response structure:', {
           success: res.data.success,
           hasData: !!res.data.data,
           dataType: typeof res.data.data,
@@ -55,15 +45,12 @@ export default function CategoryExpensePie() {
         });
         
         const items = Array.isArray(res.data.data) ? res.data.data : [];
-        console.log('📊 Chart data items:', items);
-        console.log('📊 Items structure:', items.map(item => ({
           category: item.category,
           total: item.total,
           type: typeof item.total
         })));
         
         if (items.length === 0) {
-          console.log('⚠️ No data available for pie chart');
           setData({ labels: [], datasets: [] });
           setError('No expense data available');
           setDebugInfo(prev => ({ ...prev, itemsCount: 0, noData: true }));
@@ -82,13 +69,8 @@ export default function CategoryExpensePie() {
             ]
           };
           
-          console.log('🎨 Final chart data:', chartData);
-          console.log('🎨 Labels:', chartData.labels);
-          console.log('🎨 Dataset values:', chartData.datasets[0].data);
-          console.log('🎨 Setting data state...');
           
           setData(chartData);
-          console.log('🎨 Data state set, error cleared');
           setError(null);
           setDebugInfo(prev => ({ 
             ...prev, 
@@ -96,20 +78,15 @@ export default function CategoryExpensePie() {
             chartData,
             hasData: true 
           }));
-          console.log('🎨 Debug info updated');
         }
       })
       .catch((err) => {
-        console.error('❌ Pie chart API error:', err);
-        console.error('❌ Error details:', err.response?.data || err.message);
         setError(`Failed to load chart data: ${err.response?.data?.message || err.message}`);
         setData({ labels: [], datasets: [] });
         setDebugInfo(prev => ({ ...prev, error: err.message, hasError: true }));
       })
       .finally(() => {
         setLoading(false);
-        console.log('🏁 Pie chart loading finished');
-        console.log('🏁 Final state:', { loading: false, hasData: data.labels.length > 0, hasError: !!error });
       });
   }, [user]);
 
@@ -204,11 +181,6 @@ export default function CategoryExpensePie() {
     );
   }
 
-  console.log('🎯 Rendering pie chart with data:', data);
-  console.log('🎯 Labels count:', data.labels.length);
-  console.log('🎯 Dataset values count:', data.datasets[0]?.data?.length);
-  console.log('🎯 Data object keys:', Object.keys(data));
-  console.log('🎯 Data structure:', JSON.stringify(data, null, 2));
 
   // Test with hardcoded data if no real data
   const testData = {
@@ -221,9 +193,6 @@ export default function CategoryExpensePie() {
   };
 
   const finalData = data.labels.length > 0 ? data : testData;
-  console.log('🎯 Using data:', finalData);
-  console.log('🎯 Final data labels:', finalData.labels);
-  console.log('🎯 Final data datasets:', finalData.datasets);
 
   return (
     <div className="w-full h-96 relative">
